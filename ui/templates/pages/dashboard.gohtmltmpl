@@ -1,0 +1,122 @@
+{{ define "title" }} 
+Home 
+{{ end }} 
+
+{{ define "content" }}
+<div class="container">
+  <h3 class="heading">rusty-leipzig.com</h3>
+  <p>Create a new record</p>
+  <div class="row">
+    <ul class="tablist">
+      <li class="is-active">
+        <a>A</a>
+      </li>
+      <li>
+        <a>AAAA</a>
+      </li>
+      <li>
+        <a>CNAME</a>
+      </li>
+      <li>
+        <a>MX</a>
+      </li>
+      <li>
+        <a>TXT</a>
+      </li>
+      <li>
+        <a>NS</a>
+      </li>
+      <li>
+        <a>SRV</a>
+      </li>
+      <li>
+        <a>CAA</a>
+      </li>
+    </ul>
+  </div>
+  <div class="sep"></div>
+  <div class="form-container">
+    <form
+      id="record-form"
+      class="record-form"
+      hx-post="/records"
+      hx-swap="beforeend"
+      hx-target="#records-table tbody"
+    >
+      <div class="input-group input-group-hostname">
+        <label for="hostname">Hostname</label>
+        <input
+          type="text"
+          id="hostname"
+          name="hostname"
+          placeholder="Enter hostname"
+          required
+        />
+        <span class="error-message">Invalid subdomain</span>
+        <span class="fqdn-label" id="fqdn"></span>
+      </div>
+
+      <div class="input-group">
+        <label for="ip">Will Direct To</label>
+        <input
+          type="text"
+          id="ip"
+          name="ip"
+          placeholder="Enter '@' or a custom IP Address"
+          required
+        />
+        <span class="error-message">Invalid IPV4</span>
+      </div>
+
+      <div class="input-group">
+        <label for="ttl">TTL (seconds)</label>
+        <input
+          type="number"
+          id="ttl"
+          name="ttl"
+          value="3600"
+          placeholder="Enter TTL"
+          required
+        />
+        <span class="error-message">Invalid Time-To-Live</span>
+      </div>
+
+      <button id="record-submit-btn" class="btn" type="submit">
+        Create Record
+      </button>
+    </form>
+  </div>
+  <span class="table-heading">DNS Records</span>
+  <div class="table-container">
+    <table id="records-table">
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Hostname</th>
+          <th>Value</th>
+          <th>TTL (seconds)</th>
+          <th></th>
+          <!-- For the "More" Action -->
+        </tr>
+      </thead>
+      <tbody>
+        {{range .Records}}
+        <tr>
+          <td>{{.Type}}</td>
+          <td>{{.Hostname}}</td>
+          <td>directs to {{.Value}}</td>
+          <td>{{.TTL}}</td>
+          <td>More</td>
+        </tr>
+        {{else}}
+        <tr>
+          <td colspan="5">No records found</td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script src="/static/js/index.js"></script>
+{{ end }}

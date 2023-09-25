@@ -1,0 +1,8 @@
+{{ define "title" }}
+Dashboard - Login 
+{{ end }}
+
+{{ define "content" }}
+
+
+{{ end }}
