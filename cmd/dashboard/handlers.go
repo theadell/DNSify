@@ -6,14 +6,15 @@ import (
 	"github.com/theadell/dns-api/internal/dns"
 )
 
-func HomeHandler(w http.ResponseWriter, r *http.Request) {
+func (app *App) HomeHandler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		notFoundHandler(w, r)
 		return
 	}
-	data, err := dns.ReadRecords()
+	data, err := dns.ReadRecords(app.ZoneFilePath)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 	tmpl, ok := templateCache["dashboard.gohtmltmpl"]
 	if !ok {
@@ -23,7 +24,7 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl.Execute(w, data)
 }
 
-func SubmitHandler(w http.ResponseWriter, r *http.Request) {
+func (app *App) SubmitHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return

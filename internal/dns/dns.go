@@ -14,8 +14,7 @@ type Record struct {
 	TTL      uint
 }
 
-func ReadRecords() ([]Record, error) {
-	zoneFilePath := "./db.example.com"
+func ReadRecords(zoneFilePath string) ([]Record, error) {
 	zoneFile, err := os.Open(zoneFilePath)
 	if err != nil {
 		log.Println("Failed to open zone file")
