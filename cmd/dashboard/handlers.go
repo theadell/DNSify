@@ -2,6 +2,8 @@ package main
 
 import (
 	"net/http"
+
+	"github.com/theadell/dns-api/internal/dns"
 )
 
 func HomeHandler(w http.ResponseWriter, r *http.Request) {
@@ -9,10 +11,9 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 		notFoundHandler(w, r)
 		return
 	}
-	data := map[string]interface{}{
-		"Records": []map[string]string{
-			{"Type": "A", "Hostname": "example.com", "Value": "127.0.0.1", "TTL": "3600"},
-		},
+	data, err := dns.ReadRecords()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	tmpl, ok := templateCache["dashboard.gohtmltmpl"]
 	if !ok {

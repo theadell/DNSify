@@ -100,7 +100,7 @@ Home
         </tr>
       </thead>
       <tbody>
-        {{range .Records}}
+        {{range .}}
         <tr>
           <td>{{.Type}}</td>
           <td>{{.Hostname}}</td>
