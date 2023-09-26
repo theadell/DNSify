@@ -32,10 +32,10 @@ type App struct {
 
 func main() {
 
-	zoneFilePath := flag.String("zone-file", "./db.example.com", "Path to Zone-file")
-	key := flag.String("TSIG key name", "tsig-key.", "the key name of the TSIG secret")
-	secret := flag.String("secret", "some-secret", "TSIG secret")
-	syncEnabled := flag.Bool("sync-enabled", false, "Enable automatic sync of zone fikes after a dynamic update")
+	zoneFilePath := flag.String("zoneFile", "./db.example.com", "Path to Zone-file")
+	key := flag.String("TSIGKey ", "tsig-key.", "the key name of the TSIG secret")
+	secret := flag.String("TSIGSecret", "some-secret", "TSIG secret")
+	syncEnabled := flag.Bool("sync", false, "Enable automatic sync of zone fikes after a dynamic update")
 	port := flag.Uint("port", 8080, "Port at which to bind the server")
 
 	clientId := flag.String("OAuth2 Client Id", "dns", "OAuth 2.0 & OpenId client id")
