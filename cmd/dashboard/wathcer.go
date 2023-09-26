@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os/exec"
+	"time"
 
 	"github.com/fsnotify/fsnotify"
 )
@@ -48,6 +49,7 @@ func (app *App) runSyncCommand() {
 		return
 	}
 	log.Println("Successfully executed rndc sync")
+	time.Sleep(time.Second)
 	if err := app.RecordCache.refresh(app.ZoneFilePath); err != nil {
 		log.Printf("Failed to refresh records: %s", err)
 	}
