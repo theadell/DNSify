@@ -48,4 +48,8 @@ func (app *App) runSyncCommand() {
 		return
 	}
 	log.Println("Successfully executed rndc sync")
+	if err := app.RecordCache.refresh(app.ZoneFilePath); err != nil {
+		log.Printf("Failed to refresh records: %s", err)
+	}
+	log.Println("Successfully refreshed records")
 }
