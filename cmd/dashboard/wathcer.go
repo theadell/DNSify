@@ -9,6 +9,7 @@ import (
 
 func (app *App) watchFileZone() {
 	watcher, err := fsnotify.NewWatcher()
+	watcher.Add(app.ZoneFilePath)
 	if err != nil {
 		log.Fatal(err)
 	}
