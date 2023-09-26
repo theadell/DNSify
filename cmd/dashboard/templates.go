@@ -3,19 +3,18 @@ package main
 import (
 	"fmt"
 	"html/template"
+	"log"
 	"path/filepath"
 )
 
-var templateCache map[string]*template.Template
-
-func loadTemplates() (map[string]*template.Template, error) {
+func loadTemplates() map[string]*template.Template {
 	cache := make(map[string]*template.Template)
 
 	baseTemplatePath := "./ui/templates/base.gohtmltmpl"
 
 	pages, err := filepath.Glob("./ui/templates/pages/*.gohtmltmpl")
 	if err != nil {
-		return nil, err
+		log.Fatal(err)
 	}
 
 	for _, page := range pages {
@@ -27,11 +26,10 @@ func loadTemplates() (map[string]*template.Template, error) {
 
 		ts, err := template.ParseFiles(files...)
 		if err != nil {
-			return nil, err
+			log.Fatal(err)
 		}
 
 		cache[name] = ts
 	}
-
-	return cache, nil
+	return cache
 }

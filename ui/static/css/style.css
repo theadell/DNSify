@@ -299,3 +299,21 @@ tbody tr:not(:last-child) td {
     font-size: 1rem;
   }
 }
+
+.server-error {
+  box-sizing: border-box;
+  background-color: #ffdddd; /* light red */
+  color: #a00; /* dark red */
+  padding: 20px 0;
+  margin-top: 2rem;
+  border: 1px solid #a00;
+  text-align: center;
+  border-radius: 4px;
+  opacity: 0;
+  width: 100%;
+  transition: opacity 0.5s ease-in-out;
+}
+
+.server-error.active {
+  opacity: 1;
+}

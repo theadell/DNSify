@@ -3,7 +3,7 @@ Home
 {{ end }} 
 
 {{ define "content" }}
-<div class="container">
+<div class="container" >
   <h3 class="heading">rusty-leipzig.com</h3>
   <p>Create a new record</p>
   <div class="row">
@@ -35,6 +35,7 @@ Home
     </ul>
   </div>
   <div class="sep"></div>
+
   <div class="form-container">
     <form
       id="record-form"
@@ -86,6 +87,10 @@ Home
       </button>
     </form>
   </div>
+ <div id="server-error" class="server-error" style="display:none;">
+    <div id="error-message" ></div>
+</div>
+ 
   <span class="table-heading">DNS Records</span>
   <div class="table-container">
     <table id="records-table">
@@ -103,8 +108,8 @@ Home
         {{range .}}
         <tr>
           <td>{{.Type}}</td>
-          <td>{{.Hostname}}</td>
-          <td>directs to {{.Value}}</td>
+          <td>{{.FQDN}}</td>
+          <td>directs to {{.IP}}</td>
           <td>{{.TTL}}</td>
           <td>More</td>
         </tr>

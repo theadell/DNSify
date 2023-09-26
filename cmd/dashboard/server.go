@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -8,11 +9,12 @@ import (
 
 func (app *App) RunServer() {
 	server := http.Server{
-		Addr:         "localhost:8080",
-		Handler:      app.Routes(),
+		Addr:         fmt.Sprintf("localhost:%d", app.Port),
+		Handler:      app.SessionStore.LoadAndSave(app.Routes()),
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 5 * time.Second,
 	}
+
 	err := server.ListenAndServe()
 	log.Fatal(err)
 }

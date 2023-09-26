@@ -7,6 +7,16 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
+    <meta property="og:title" content="DNS Management Dashboard" />
+    <meta property="og:description" content="API for managing DNS records, with CRUD operations, and real-time updates for BIND" />
+    <meta property="og:image" content="/static/img/favicon.png" />
+    <!-- <meta property="og:url" content="https://yourapi.com/documentation" /> -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="DNS Management API" />
+    <meta property="og:locale" content="en_US" />
+
+
+   <link rel="icon" href="/static/img/favicon.png" type="image/png">
     <link href="/static/css/style.css" rel="stylesheet" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -20,5 +30,6 @@
   {{ block "content" . }}
   {{ end }}
     <script src="https://unpkg.com/htmx.org@1.9.6"></script>
+    <script src="https://unpkg.com/htmx.org/dist/ext/response-targets.js"></script>
   </body>
 </html>
