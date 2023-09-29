@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/theadell/dns-api/internal/dnsclient"
@@ -36,9 +37,8 @@ func (app *App) IndexHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
-	// data := app.RecordCache.get()
-	data := "value"
-	tmpl, ok := app.TemplateCache["dashboard.gohtmltmpl"]
+	data := app.bindClient.GetRecords()
+	tmpl, ok := app.templateCache["dashboard.gohtmltmpl"]
 
 	if !ok {
 		http.Error(w, "template was not found", http.StatusInternalServerError)
@@ -76,13 +76,12 @@ func (app *App) SubmitHandler(w http.ResponseWriter, r *http.Request) {
 		FQDN: fmt.Sprintf("%s.%s.", hostname, "rusty-leipzig.com"),
 		IP:   ip,
 	}
-	// err = dnsutils.InsertRecordSync(app.DnsClient, app.TSIGKey, record)
-	// if err != nil {
-	// 	log.Printf("Failed to update record with error %s\n", err.Error())
-	// 	http.Error(w, "Failed to add record", http.StatusInternalServerError)
-	// 	return
-	// }
 
+	err = app.bindClient.AddRecord(record)
+	if err != nil {
+		slog.Error("Failed to add record", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 	const tpl = `<tr><td>{{.Type}}</td><td>{{.FQDN}}</td><td>{{.IP}}</td><td>{{.TTL}}</td><td>More</td></tr>`
 
 	// Parse the template
@@ -99,7 +98,7 @@ func (app *App) SubmitHandler(w http.ResponseWriter, r *http.Request) {
 }
 func (app *App) notFoundHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotFound)
-	tmpl, _ := app.TemplateCache["error.gohtmltmpl"]
+	tmpl, _ := app.templateCache["error.gohtmltmpl"]
 	tmpl.Execute(w, nil)
 }
 
@@ -109,7 +108,7 @@ func (app *App) initiateOAuthProcess(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "Failed to generate state", http.StatusInternalServerError)
 	}
-	app.SessionStore.Put(r.Context(), StateKey, state)
+	app.sessionManager.Put(r.Context(), StateKey, state)
 	// codeVerifier, err := GenerateSecureRandom(32)
 	// if err != nil {
 	// 	http.Error(w, "Failed to generate code verifier", http.StatusInternalServerError)
@@ -118,13 +117,13 @@ func (app *App) initiateOAuthProcess(w http.ResponseWriter, r *http.Request) {
 	// app.SessionStore.Put(r.Context(), CodeVerifierKey, codeVerifier)
 	// codeChallenge := GenerateCodeChallenge(codeVerifier)
 	// url := app.OauthClient.AuthCodeURL(state, oauth2.SetAuthURLParam(CodeChallengeKey, codeChallenge), oauth2.SetAuthURLParam(CodeChallengeMethodKey, "S256"))
-	url := app.OauthClient.AuthCodeURL(state)
+	url := app.oauthClient.AuthCodeURL(state)
 	http.Redirect(w, r, url, http.StatusSeeOther)
 }
 
 func (app *App) handleOAuthCallback(w http.ResponseWriter, r *http.Request) {
 
-	state := app.SessionStore.GetString(r.Context(), StateKey)
+	state := app.sessionManager.GetString(r.Context(), StateKey)
 
 	if state == "" {
 		http.Error(w, "No state found in session", http.StatusBadRequest)
@@ -139,7 +138,7 @@ func (app *App) handleOAuthCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	code := r.URL.Query().Get("code")
-	token, err := app.OauthClient.Exchange(r.Context(), code)
+	token, err := app.oauthClient.Exchange(r.Context(), code)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -151,7 +150,7 @@ func (app *App) handleOAuthCallback(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]string{"error": "Token is invalid"})
 		return
 	}
-	app.SessionStore.Put(r.Context(), AuthenticatedKey, true)
+	app.sessionManager.Put(r.Context(), AuthenticatedKey, true)
 	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 }
 func GenerateSecureRandom(l uint8) (string, error) {

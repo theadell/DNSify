@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/alexedwards/scs/v2"
+	"github.com/theadell/dns-api/internal/dnsclient"
 	"golang.org/x/oauth2"
 )
 
@@ -13,6 +14,7 @@ type App struct {
 	sessionManager *scs.SessionManager
 	oauthClient    *oauth2.Config
 	templateCache  map[string]*template.Template
+	bindClient     dnsclient.DNSClient
 }
 
 func main() {
@@ -33,10 +35,17 @@ func main() {
 		},
 	}
 
+	bindClient, err := dnsclient.NewBindClient(cfg.DNSClientConfig)
+	if err != nil {
+		log.Fatal(err)
+	}
 	app := &App{
+		config:         cfg.HTTPServerConfig,
 		sessionManager: sessionManager,
 		oauthClient:    oauth2Clinet,
+		bindClient:     bindClient,
+		templateCache:  loadTemplates(),
 	}
-
 	app.RunServer()
+
 }

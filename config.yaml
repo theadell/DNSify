@@ -7,10 +7,10 @@ dnsClient:
   zone: "rusty-leipzig.com."
 
 httpServer:
-  host: "127.0.0.1"
+  host: "localhost"
   port: 8080
 
 oauth2Client:
-  clientID: "yourClientID"
+  clientID: "dns"
   clientSecret: "yourClientSecret"
   redirectURL: "http://localhost:8080/oauth/callback"

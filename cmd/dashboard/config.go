@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/viper"
 	"github.com/theadell/dns-api/internal/dnsclient"
@@ -31,7 +32,8 @@ func loadConfig() (Config, error) {
 	v.AddConfigPath(".")
 	v.SetConfigType("yaml")
 	v.AutomaticEnv()
-
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	v.SetEnvPrefix("DNSAPP")
 	if err := v.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			fmt.Println("No config file found")
