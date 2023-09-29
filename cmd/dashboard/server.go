@@ -9,8 +9,8 @@ import (
 
 func (app *App) RunServer() {
 	server := http.Server{
-		Addr:         fmt.Sprintf("localhost:%d", app.Port),
-		Handler:      app.SessionStore.LoadAndSave(app.Routes()),
+		Addr:         fmt.Sprintf("%s:%d", app.config.Addr, app.config.Port),
+		Handler:      app.sessionManager.LoadAndSave(app.Routes()),
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 5 * time.Second,
 	}

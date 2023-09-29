@@ -1,0 +1,16 @@
+dnsClient:
+  zoneFilePath: "./db.example.com"
+  tsigKey: "exampleKey"
+  tsigSecret: "exampleSecret"
+  host: "157.230.106.145"
+  port: 53
+  zone: "rusty-leipzig.com."
+
+httpServer:
+  host: "127.0.0.1"
+  port: 8080
+
+oauth2Client:
+  clientID: "yourClientID"
+  clientSecret: "yourClientSecret"
+  redirectURL: "http://localhost:8080/oauth/callback"

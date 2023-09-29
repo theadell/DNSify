@@ -10,7 +10,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/theadell/dns-api/internal/dnsutils"
+	"github.com/theadell/dns-api/internal/dnsclient"
 )
 
 const (
@@ -36,8 +36,8 @@ func (app *App) IndexHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
-	data := app.RecordCache.get()
-
+	// data := app.RecordCache.get()
+	data := "value"
 	tmpl, ok := app.TemplateCache["dashboard.gohtmltmpl"]
 
 	if !ok {
@@ -71,17 +71,17 @@ func (app *App) SubmitHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid input values", http.StatusBadRequest)
 		return
 	}
-	record := dnsutils.Record{
+	record := dnsclient.Record{
 		Type: "A",
 		FQDN: fmt.Sprintf("%s.%s.", hostname, "rusty-leipzig.com"),
 		IP:   ip,
 	}
-	err = dnsutils.InsertRecordSync(app.DnsClient, app.TSIGKey, record)
-	if err != nil {
-		log.Printf("Failed to update record with error %s\n", err.Error())
-		http.Error(w, "Failed to add record", http.StatusInternalServerError)
-		return
-	}
+	// err = dnsutils.InsertRecordSync(app.DnsClient, app.TSIGKey, record)
+	// if err != nil {
+	// 	log.Printf("Failed to update record with error %s\n", err.Error())
+	// 	http.Error(w, "Failed to add record", http.StatusInternalServerError)
+	// 	return
+	// }
 
 	const tpl = `<tr><td>{{.Type}}</td><td>{{.FQDN}}</td><td>{{.IP}}</td><td>{{.TTL}}</td><td>More</td></tr>`
 
@@ -96,15 +96,6 @@ func (app *App) SubmitHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Error executing response fragment: %s", err.Error()), http.StatusInternalServerError)
 	}
 
-	if app.SyncEnabled {
-		select {
-		case app.syncCh <- struct{}{}: // try to acquire the lock
-			go app.runSyncCommand()
-		default: // if cannot acquire the lock, skip
-			log.Println("Another sync is in progress. Skipping...")
-			return
-		}
-	}
 }
 func (app *App) notFoundHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotFound)
