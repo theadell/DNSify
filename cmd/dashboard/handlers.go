@@ -27,6 +27,13 @@ const (
 	UserIdKey              string = "user_id"
 )
 
+var excludedFQDNs = map[string]struct{}{
+	"rusty-leipzig.com.":     {},
+	"ns1.rusty-leipzig.com.": {},
+	"ns2.rusty-leipzig.com.": {},
+	"www.rusty-leipzig.com.": {},
+}
+
 func (app *App) IndexHandler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		app.notFoundHandler(w, r)
@@ -36,14 +43,21 @@ func (app *App) IndexHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl.Execute(w, nil)
 }
 func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
-	data := app.bindClient.GetRecords()
+	allRecords := app.bindClient.GetRecords()
+
+	var filteredRecords []dnsclient.Record
+	for _, record := range allRecords {
+		if _, excluded := excludedFQDNs[record.FQDN]; !excluded {
+			filteredRecords = append(filteredRecords, record)
+		}
+	}
 	tmpl, ok := app.templateCache["dashboard.gohtmltmpl"]
 
 	if !ok {
 		http.Error(w, "template was not found", http.StatusInternalServerError)
 		return
 	}
-	tmpl.Execute(w, data)
+	tmpl.Execute(w, filteredRecords)
 }
 
 func (app *App) AddRecordHandler(w http.ResponseWriter, r *http.Request) {
@@ -76,6 +90,11 @@ func (app *App) AddRecordHandler(w http.ResponseWriter, r *http.Request) {
 		FQDN: fmt.Sprintf("%s.%s.", hostname, "rusty-leipzig.com"),
 		IP:   ip,
 		TTL:  ttlNum,
+	}
+
+	if _, excluded := excludedFQDNs[record.FQDN]; excluded {
+		http.Error(w, "Addition of this record is not allowed", http.StatusBadRequest)
+		return
 	}
 
 	err = app.bindClient.AddRecord(record)
@@ -210,6 +229,10 @@ func (app *App) DeleteRecordHandler(w http.ResponseWriter, r *http.Request) {
 		IP:   ip,
 	}
 
+	if _, excluded := excludedFQDNs[record.FQDN]; excluded {
+		http.Error(w, "Deletion of this record is not allowed", http.StatusBadRequest)
+		return
+	}
 	err := app.bindClient.RemoveRecord(record)
 	if err != nil {
 		slog.Error("Failed to delete record", err)
