@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"html/template"
 	"log"
 	"log/slog"
 	"net/http"
@@ -40,7 +39,7 @@ func (app *App) IndexHandler(w http.ResponseWriter, r *http.Request) {
 		app.notFoundHandler(w, r)
 		return
 	}
-	tmpl, _ := app.templateCache["index.gohtmltmpl"]
+	tmpl, _ := app.templateCache["index"]
 	tmpl.Execute(w, nil)
 }
 func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
@@ -52,13 +51,18 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 			filteredRecords = append(filteredRecords, record)
 		}
 	}
-	tmpl, ok := app.templateCache["dashboard.gohtmltmpl"]
+	tmpl, ok := app.templateCache["dashboard"]
 
 	if !ok {
 		http.Error(w, "template was not found", http.StatusInternalServerError)
 		return
 	}
-	tmpl.Execute(w, filteredRecords)
+	err := tmpl.Execute(w, filteredRecords)
+	if err != nil {
+		log.Printf("Error executing template: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (app *App) AddRecordHandler(w http.ResponseWriter, r *http.Request) {
@@ -105,31 +109,11 @@ func (app *App) AddRecordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	const tpl = `
-          <tr>
-            <td>{{.Type}}</td>
-            <td>{{.FQDN}}</td>
-            <td>directs to {{.IP}}</td>
-            <td>{{.TTL}}</td>
-            <td>
-            <button
-              class="btn-delete"
-              hx-delete="/records?Type={{.Type}}&FQDN={{.FQDN}}&IP={{.IP}}&TTL={{.TTL}}"
-              hx-confirm="Are you sure you want to delete this record?"
-              hx-target="closest tr"
-              hx-swap="outerHTML swap:1s">
-              Delete
-            </button>
-            </td>
-          </tr>`
-	// Parse the template
-	t, err := template.New("record").Parse(tpl)
-	if err != nil {
-		log.Fatalf("Error parsing template: %v", err)
+	tmpl, ok := app.templateCache["record_fragment"]
+	if !ok {
+		http.Error(w, "Couldn't find fragment", http.StatusInternalServerError)
 	}
-
-	// Execute the template directly to the ResponseWriter
-	if err := t.Execute(w, record); err != nil {
+	if err := tmpl.Execute(w, record); err != nil {
 		http.Error(w, fmt.Sprintf("Error executing response fragment: %s", err.Error()), http.StatusInternalServerError)
 	}
 
@@ -147,7 +131,7 @@ func (app *App) SubmitHandler(w http.ResponseWriter, r *http.Request) {
 }
 func (app *App) notFoundHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotFound)
-	tmpl, _ := app.templateCache["error.gohtmltmpl"]
+	tmpl, _ := app.templateCache["error"]
 	tmpl.Execute(w, nil)
 }
 

@@ -66,7 +66,6 @@ func main() {
 		slog.Info("Received stop signal", "signal", sig)
 		app.GracefulShutdown()
 	}
-
 	slog.Info("Application has stopped")
 
 }
