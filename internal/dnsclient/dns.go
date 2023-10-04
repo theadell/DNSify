@@ -23,6 +23,7 @@ type DNSClient interface {
 	GetRecords() []Record
 	AddRecord(record Record) error
 	RemoveRecord(record Record) error
+	Close()
 }
 
 type DNSClientConfig struct {
@@ -82,6 +83,7 @@ func NewBindClient(config DNSClientConfig) (*BindClient, error) {
 	if err != nil {
 		return nil, err
 	}
+	go client.backgroundSync()
 	return client, nil
 }
 
@@ -189,7 +191,6 @@ func (c *BindClient) RemoveRecord(record Record) error {
 
 	return nil
 }
-
 func (c *BindClient) backgroundSync() {
 	ticker := time.NewTicker(30 * time.Minute)
 	defer ticker.Stop()
@@ -197,11 +198,17 @@ func (c *BindClient) backgroundSync() {
 	for {
 		select {
 		case <-ticker.C:
-			err := c.populateCache()
+			slog.Info("Starting sync of journal to zone file")
+			err := c.syncJournalToZoneFile()
 			if err != nil {
-				slog.Error("Failed to synchronize records", err)
+				slog.Error("Failed to sync journal to zone file", "error", err.Error())
 			} else {
-				slog.Info("Records synchronized successfully")
+				err = c.populateCache()
+				if err != nil {
+					slog.Error("Failed to synchronize records", "error", err.Error())
+				} else {
+					slog.Info("Records synchronized successfully")
+				}
 			}
 		case <-c.done:
 			slog.Info("Terminating background synchronization")
