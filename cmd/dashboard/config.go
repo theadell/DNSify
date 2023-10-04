@@ -15,8 +15,9 @@ type Config struct {
 }
 
 type HTTPServerConfig struct {
-	Host string `mapstructure:"host"`
-	Port uint   `mapstructure:"port"`
+	Host         string `mapstructure:"host"`
+	Port         uint   `mapstructure:"port"`
+	SecureCookie bool   `mapstructure:"secureCookie"`
 }
 
 type OAuth2ClientConfig struct {

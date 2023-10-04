@@ -29,7 +29,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	sessionManager := NewSessionManager()
+	sessionManager := NewSessionManager(cfg.HTTPServerConfig.SecureCookie)
 	oauth2Clinet := &oauth2.Config{
 		ClientID:     cfg.OAuth2ClientConfig.ClientID,
 		ClientSecret: cfg.OAuth2ClientConfig.ClientSecret,

@@ -10,6 +10,7 @@ dnsClient:
 httpServer:
   host: "localhost"
   port: 8080
+  secureCookie: false
 
 oauth2Client:
   clientID: "dns"
