@@ -7,14 +7,25 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <meta property="og:title" content="DNS Management Dashboard" />
-    <meta property="og:description" content="API for managing DNS records, with CRUD operations, and real-time updates for BIND" />
-    <meta property="og:image" content="/static/img/favicon.png" />
-    <!-- <meta property="og:url" content="https://yourapi.com/documentation" /> -->
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="DNS Management API" />
-    <meta property="og:locale" content="en_US" />
+     <!-- SEO Optimized Meta Tags -->
 
+    <meta name="description" content="Efficiently manage your DNS records with our user-friendly DNS Management Dashboard, providing real-time updates for BIND (Berkeley Internet Name Domain) dns server" />
+    <meta name="keywords" content="DNS, Management Dashboard, BIND, CRUD, API" />
+    
+    <meta property="og:title" content="{{ template "title" . }} | DNS Management Dashboard" />
+    <meta property="og:description" content="Quickly and easily handle your DNS records with our simple tool. Perfect for effortless management of BIND records over HTTP!" />
+    <meta property="og:image" content="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=3868&q=80" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="DNS Management Dashboard" />
+    <meta property="og:url" content="https://dns.rusty-leipzig.com" />
+    <meta property="og:locale" content="en_US" />
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://yourdomain.com" />
+    <meta property="twitter:title" content="{{ template "title" . }} | DNS Management Dashboard" />
+    <meta property="twitter:description" content="Manage and control your DNS records with our efficient, real-time, and user-friendly DNS Management Dashboard designed for BIND." />
+    <meta property="twitter:image" content="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=3868&q=80" />
 
    <link rel="icon" href="/static/img/favicon.png" type="image/png">
     <link href="/static/css/style.css" rel="stylesheet" />

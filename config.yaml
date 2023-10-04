@@ -1,7 +1,7 @@
 dnsClient:
   zoneFilePath: "./db.example.com"
-  tsigKey: "exampleKey"
-  tsigSecret: "exampleSecret"
+  tsigKey: "tsig-key."
+  tsigSecret: "tsig-secret"
   host: "157.230.106.145"
   port: 53
   zone: "rusty-leipzig.com."

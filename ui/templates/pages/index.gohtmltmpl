@@ -1,8 +1,31 @@
 {{ define "title" }}
-Dashboard - Login 
+Login 
 {{ end }}
 
 {{ define "content" }}
 
+<div class="wrapper">
+    <div class="brand-section">
+        <div class="brand-content">
+          <img class="logo" src="https://assets.cdn.personio.de/logos/4828/default/56be0439ec04f9bb1a8d757e9c7d1cd1.png" alt="itemis AG logo">
+            <h2>LEIPZIG</h1>
+        </div>
+    </div>
+    <div class="login-section">
+    <div class="login-card">
 
+    <h3>Welcome to Rusty-Leipzig</h3>
+    <p>Access the DNS Management Dashboard using your company account.</p>
+    <div class="sso-section">
+        <a href="/login" class="sso-link">
+            <div class="sso-content">
+                <img src="/static/img/key.png" alt="Keycloak login">
+                <span>Login with your itemis leipzig credentials</span>
+            </div>
+        </a>
+    </div>
+    <a class="login-help" href="mailto:ahabib@itemis.com?subject=Login%20Issue%20%7C%20DNS%20Management%20Dashboard">Having trouble logging in? Contact us.</a>
+</div>
+    </div>
+</div>
 {{ end }}
