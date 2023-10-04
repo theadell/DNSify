@@ -46,6 +46,7 @@ type BindClient struct {
 	port         uint16
 	serverAddr   string
 	tsigKey      string
+	SyncInterval int
 	done         chan bool
 }
 
@@ -78,6 +79,7 @@ func NewBindClient(config DNSClientConfig) (*BindClient, error) {
 		port:         config.Port,
 		serverAddr:   fmt.Sprintf("%s:%d", hostIp.String(), config.Port),
 		tsigKey:      config.TSIGKey,
+		SyncInterval: config.SyncInterval,
 		done:         make(chan bool),
 	}
 
@@ -196,7 +198,7 @@ func (c *BindClient) RemoveRecord(record Record) error {
 	return nil
 }
 func (c *BindClient) backgroundSync() {
-	ticker := time.NewTicker(30 * time.Minute)
+	ticker := time.NewTicker(time.Duration(c.SyncInterval) * time.Minute)
 	defer ticker.Stop()
 
 	for {
