@@ -76,6 +76,7 @@ func (app *App) AddRecordHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.Error("Failed to add record", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 	const tpl = `<tr><td>{{.Type}}</td><td>{{.FQDN}}</td><td>{{.IP}}</td><td>{{.TTL}}</td><td>More</td></tr>`
 

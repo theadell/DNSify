@@ -43,6 +43,7 @@ Home
       hx-post="/records"
       hx-swap="beforeend"
       hx-target="#records-table tbody"
+      hx-indicator="#spinner"
     >
       <div class="input-group input-group-hostname">
         <label for="hostname">Hostname</label>
@@ -82,11 +83,12 @@ Home
         <span class="error-message">Invalid Time-To-Live</span>
       </div>
 
-      <button id="record-submit-btn" class="btn" type="submit">
+      <button id="record-submit-btn" class="btn" type="submit" >
         Create Record
       </button>
     </form>
   </div>
+<div id="spinner" class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
  <div id="server-error" class="server-error" style="display:none;">
     <div id="error-message" ></div>
 </div>
