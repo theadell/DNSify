@@ -33,6 +33,7 @@ type DNSClientConfig struct {
 	Host         string `mapstructure:"host"`
 	Port         uint16 `mapstructure:"port"`
 	Zone         string `mapstructure:"zone"`
+	SyncInterval int    `mapstructure:"SyncInterval"`
 }
 
 type BindClient struct {
@@ -62,6 +63,9 @@ func NewBindClient(config DNSClientConfig) (*BindClient, error) {
 	}
 	if config.TSIGKey == "" || config.TSIGSecret == "" {
 		return nil, fmt.Errorf("TSIGKey and TSIGSecret must be specified")
+	}
+	if config.SyncInterval <= 0 {
+		config.SyncInterval = 30
 	}
 
 	client := &BindClient{

@@ -5,6 +5,7 @@ dnsClient:
   host: "157.230.106.145"
   port: 53
   zone: "rusty-leipzig.com."
+  syncInterval: 30
 
 httpServer:
   host: "localhost"
