@@ -34,7 +34,7 @@ func main() {
 		ClientID:     cfg.OAuth2ClientConfig.ClientID,
 		ClientSecret: cfg.OAuth2ClientConfig.ClientSecret,
 		RedirectURL:  cfg.OAuth2ClientConfig.RedirectURL,
-		Scopes:       []string{"openid"},
+		Scopes:       []string{"openid", "microprofile-jwt"},
 		Endpoint: oauth2.Endpoint{
 			AuthURL:  "https://accounts.itemis-leipzig.de/realms/Leipzig/protocol/openid-connect/auth",
 			TokenURL: "https://accounts.itemis-leipzig.de/realms/Leipzig/protocol/openid-connect/token",

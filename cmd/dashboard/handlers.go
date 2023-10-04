@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -155,7 +156,6 @@ func (app *App) initiateOAuthProcess(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) handleOAuthCallback(w http.ResponseWriter, r *http.Request) {
-
 	state := app.sessionManager.GetString(r.Context(), StateKey)
 
 	if state == "" {
@@ -183,6 +183,38 @@ func (app *App) handleOAuthCallback(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]string{"error": "Token is invalid"})
 		return
 	}
+	rawIDToken, ok := token.Extra("id_token").(string)
+	if !ok {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "No id_token field in oauth2 token."})
+		return
+	}
+
+	parts := strings.Split(rawIDToken, ".")
+	if len(parts) != 3 {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "ID token format is invalid."})
+		return
+	}
+
+	payload, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to decode payload of ID token."})
+		return
+	}
+	var claims struct {
+		UPN string `json:"upn"`
+	}
+	if err := json.Unmarshal(payload, &claims); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to decode ID Token claims."})
+		return
+	}
+
+	ip := strings.Split(r.RemoteAddr, ":")[0]
+
+	slog.Info("User logged in", "upn", claims.UPN, "ip", ip)
 	app.sessionManager.Put(r.Context(), AuthenticatedKey, true)
 	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 }

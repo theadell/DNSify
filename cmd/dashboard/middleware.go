@@ -1,6 +1,8 @@
 package main
 
-import "net/http"
+import (
+	"net/http"
+)
 
 func (app *App) RequireAuthentication(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -11,4 +13,19 @@ func (app *App) RequireAuthentication(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+func (app *App) redirectIfLoggedIn(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		isAuthenticated := app.sessionManager.GetBool(r.Context(), AuthenticatedKey)
+		if isAuthenticated {
+			referer := r.Header.Get("Referer")
+			if referer == "" {
+				referer = "/dashboard"
+			}
+			http.Redirect(w, r, referer, http.StatusSeeOther)
+			return
+		}
+		next(w, r)
+	}
 }
