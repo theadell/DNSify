@@ -28,11 +28,11 @@ const (
 )
 
 var excludedFQDNs = map[string]struct{}{
-	"rusty-leipzig.com.":      {},
-	"ns1.rusty-leipzig.com.":  {},
-	"ns2.rusty-leipzig.com.":  {},
-	"www.rusty-leipzig.com.":  {},
-	"dns.rusty-leipzig.com.	": {},
+	"rusty-leipzig.com.":     {},
+	"ns1.rusty-leipzig.com.": {},
+	"ns2.rusty-leipzig.com.": {},
+	"www.rusty-leipzig.com.": {},
+	"dns.rusty-leipzig.com.": {},
 }
 
 func (app *App) IndexHandler(w http.ResponseWriter, r *http.Request) {
