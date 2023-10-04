@@ -50,3 +50,14 @@ func GenerateCodeChallenge(verifier string) string {
 	hash := sha256.Sum256([]byte(verifier))
 	return base64.RawURLEncoding.EncodeToString(hash[:])
 }
+
+func stringToUint(s string) (uint, error) {
+	// First, convert the string to uint64
+	u64, err := strconv.ParseUint(s, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+
+	// Convert uint64 to uint
+	return uint(u64), nil
+}

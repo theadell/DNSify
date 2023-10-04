@@ -66,10 +66,16 @@ func (app *App) AddRecordHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid input values", http.StatusBadRequest)
 		return
 	}
+	ttlNum, err := stringToUint(ttl)
+	if err != nil {
+		http.Error(w, "Invalid ttl", http.StatusBadRequest)
+		return
+	}
 	record := dnsclient.Record{
 		Type: "A",
 		FQDN: fmt.Sprintf("%s.%s.", hostname, "rusty-leipzig.com"),
 		IP:   ip,
+		TTL:  ttlNum,
 	}
 
 	err = app.bindClient.AddRecord(record)
@@ -78,8 +84,24 @@ func (app *App) AddRecordHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	const tpl = `<tr><td>{{.Type}}</td><td>{{.FQDN}}</td><td>{{.IP}}</td><td>{{.TTL}}</td><td>More</td></tr>`
 
+	const tpl = `
+          <tr>
+            <td>{{.Type}}</td>
+            <td>{{.FQDN}}</td>
+            <td>directs to {{.IP}}</td>
+            <td>{{.TTL}}</td>
+            <td>
+            <button
+              class="btn-delete"
+              hx-delete="/records?Type={{.Type}}&FQDN={{.FQDN}}&IP={{.IP}}&TTL={{.TTL}}"
+              hx-confirm="Are you sure you want to delete this record?"
+              hx-target="closest tr"
+              hx-swap="outerHTML swap:1s">
+              Delete
+            </button>
+            </td>
+          </tr>`
 	// Parse the template
 	t, err := template.New("record").Parse(tpl)
 	if err != nil {
