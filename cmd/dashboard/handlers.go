@@ -169,13 +169,14 @@ func (app *App) DeleteRecordHandler(w http.ResponseWriter, r *http.Request) {
 	recordType := strings.TrimSpace(r.URL.Query().Get("Type"))
 	fqdn := strings.TrimSpace(r.URL.Query().Get("FQDN"))
 	ip := strings.TrimSpace(r.URL.Query().Get("IP"))
+	ttl := strings.TrimSpace(r.URL.Query().Get("TTL"))
 
 	if !isValidType(recordType) {
 		http.Error(w, "Invalid record type", http.StatusBadRequest)
 		return
 	}
 
-	if !isValidHostname(fqdn) || !isValidIP(ip) {
+	if !isValidFQDN(fqdn) || !isValidIP(ip) || !isValidTTL(ttl) {
 		http.Error(w, "Invalid input values", http.StatusBadRequest)
 		return
 	}
@@ -192,5 +193,5 @@ func (app *App) DeleteRecordHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusNoContent)
+	w.WriteHeader(http.StatusOK)
 }

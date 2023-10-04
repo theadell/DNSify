@@ -1,3 +1,9 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 body {
   font-family: "Roboto", sans-serif;
   display: flex;
@@ -8,7 +14,6 @@ body {
   width: 100%;
   max-width: 1100px;
   margin: 0 auto;
-  box-sizing: border-box;
 }
 
 .container {
@@ -16,6 +21,7 @@ body {
   justify-content: center;
   align-items: flex-start;
   flex-direction: column;
+  padding: 2rem;
   width: 100%;
 }
 
@@ -153,6 +159,27 @@ button:disabled {
 
 button:not(:disabled):hover {
   background-color: #0056b3;
+}
+
+.btn-delete {
+  cursor: pointer;
+  margin-top: auto;
+  background-color: #d9534f;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 4px;
+  font-size: 16px;
+  transition: background-color 0.3s ease-in-out;
+}
+
+.btn-delete:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.btn-delete:not(:disabled):hover {
+  background-color: #c9302c; /* A darker shade of the red */
 }
 
 .table-container {
@@ -426,4 +453,9 @@ tbody tr:not(:last-child) td {
   .login-card {
     padding: 2rem;
   }
+}
+
+tr.htmx-swapping td {
+  opacity: 0;
+  transition: opacity 1s ease-out;
 }

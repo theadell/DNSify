@@ -9,6 +9,11 @@ import (
 	"strconv"
 )
 
+func isValidFQDN(fqdn string) bool {
+	re := regexp.MustCompile(`^(?:[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}\.$`)
+	return re.MatchString(fqdn) && len(fqdn) <= 255
+}
+
 func isValidHostname(hostname string) bool {
 	re := regexp.MustCompile(`^[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$`)
 	if !re.MatchString(hostname) || len(hostname) > 100 {
