@@ -1,12 +1,16 @@
 package main
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/theadell/dns-api/ui"
+)
 
 func (app *App) Routes() http.Handler {
 	mux := http.NewServeMux()
 
-	fs := http.FileServer(http.Dir("./ui/static"))
-	mux.Handle("/static/", http.StripPrefix("/static/", fs))
+	fs := http.FileServer(http.FS(ui.StatifFS))
+	mux.Handle("/static/", fs)
 
 	// Handlers
 	mux.HandleFunc("/", app.redirectIfLoggedIn(app.IndexHandler))

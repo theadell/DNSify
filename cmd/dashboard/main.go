@@ -11,6 +11,7 @@ import (
 
 	"github.com/alexedwards/scs/v2"
 	"github.com/theadell/dns-api/internal/dnsclient"
+	"github.com/theadell/dns-api/ui"
 	"golang.org/x/oauth2"
 )
 
@@ -50,7 +51,7 @@ func main() {
 		sessionManager: sessionManager,
 		oauthClient:    oauth2Clinet,
 		bindClient:     bindClient,
-		templateCache:  loadTemplates(),
+		templateCache:  loadTemplates(ui.TemplatesFS),
 	}
 	stopChan := make(chan os.Signal, 1)
 	signal.Notify(stopChan, os.Interrupt, syscall.SIGTERM)
