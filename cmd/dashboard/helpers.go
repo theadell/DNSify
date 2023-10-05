@@ -22,9 +22,14 @@ func isValidHostname(hostname string) bool {
 	return true
 }
 
-func isValidIP(ip string) bool {
+func isValidIPv4(ip string) bool {
 	parsedIP := net.ParseIP(ip)
 	return parsedIP != nil && parsedIP.To4() != nil
+}
+
+func isValidIPv6(ip string) bool {
+	parsedIP := net.ParseIP(ip)
+	return parsedIP != nil && parsedIP.To4() == nil && parsedIP.To16() != nil
 }
 
 func isValidTTL(ttl string) bool {

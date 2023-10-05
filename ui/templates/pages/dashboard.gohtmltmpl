@@ -80,6 +80,7 @@ Dashboard
           placeholder="Enter TTL"
           required
         />
+        <input type="hidden" id="recordType" name="type" value="" />
         <span class="error-message">Invalid Time-To-Live</span>
       </div>
 

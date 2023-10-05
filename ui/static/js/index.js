@@ -10,8 +10,8 @@ document.addEventListener("DOMContentLoaded", function () {
   ttlInput.isDirty = false;
 
   var hostnameRegex = /^(?!-)[a-zA-Z0-9-]{1,63}(?<!-)$/;
-  var ipRegex = /^(?!0)(?!.*\.$)((1?\d?\d|25[0-5]|2[0-4]\d)(\.|$)){4}$/;
-
+  var ipv4Regex = /^(?!0)(?!.*\.$)((1?\d?\d|25[0-5]|2[0-4]\d)(\.|$)){4}$/;
+  var ipv6Regex = /^([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}$/;
   form.addEventListener("submit", function (e) {
     validateForm(e);
   });
@@ -85,11 +85,33 @@ document.addEventListener("DOMContentLoaded", function () {
     var errorMessage = input.parentNode.querySelector(".error-message");
     if (input.isDirty) {
       var value = input.value.trim();
-      if (!ipRegex.test(value) && value != "@") {
+      var recordType = recordTypeInput.value;
+
+      // If value is "@" and record type is not "A"
+      if (value === "@" && recordType !== "A") {
         input.classList.add("error");
-        errorMessage.style.opacity = "1"; // Show the error message
+        errorMessage.textContent = "Only 'A' records can have '@' value";
+        errorMessage.style.opacity = "1";
         return false;
       }
+
+      // If it's "@" and an "A" record type, it's valid.
+      if (value === "@" && recordType === "A") {
+        input.classList.remove("error");
+        errorMessage.style.opacity = "0";
+        return true;
+      }
+
+      var currentRegex = recordType === "AAAA" ? ipv6Regex : ipv4Regex;
+
+      if (!currentRegex.test(value)) {
+        input.classList.add("error");
+        errorMessage.textContent =
+          recordType === "AAAA" ? "Invalid IPV6" : "Invalid IPV4";
+        errorMessage.style.opacity = "1";
+        return false;
+      }
+
       input.classList.remove("error");
       errorMessage.style.opacity = "0";
       return true;
@@ -123,11 +145,18 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   var tablist = document.querySelector(".tablist");
+  var recordTypeInput = document.getElementById("recordType");
+  recordTypeInput.value = tablist.querySelector(".is-active").innerText.trim();
   tablist.addEventListener("click", function (e) {
     if (e.target.tagName === "A") {
       var currentActive = tablist.querySelector(".is-active");
       if (currentActive) currentActive.classList.remove("is-active");
       e.target.parentNode.classList.add("is-active");
+      recordTypeInput.value = e.target.innerText.trim();
+      if (ipInput.value.trim() !== "") {
+        validateIp(ipInput);
+        toggleButtonState();
+      }
     }
   });
 });

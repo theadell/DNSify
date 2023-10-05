@@ -67,37 +67,49 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) AddRecordHandler(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
-	if err != nil {
+
+	if err := r.ParseForm(); err != nil {
 		http.Error(w, "Failed to parse form", http.StatusBadRequest)
 		return
 	}
 
-	hostname := r.FormValue("hostname")
-	ip := r.FormValue("ip")
-	ttl := r.FormValue("ttl")
+	hostname, ip, ttl, recordType := r.FormValue("hostname"), r.FormValue("ip"), r.FormValue("ttl"), r.FormValue("type")
 
+	// Check for '@' value in IP and replace it
 	if ip == "@" {
 		ip = "157.230.106.145"
 	}
 
-	// Validate the form values
-	if !isValidHostname(hostname) || !isValidIP(ip) || !isValidTTL(ttl) {
-		http.Error(w, "Invalid input values", http.StatusBadRequest)
+	// Validate each input field
+	if !isValidType(recordType) {
+		http.Error(w, "Invalid record type", http.StatusBadRequest)
 		return
 	}
+	if !isValidHostname(hostname) {
+		http.Error(w, "Invalid hostname", http.StatusBadRequest)
+		return
+	}
+	if recordType == "A" && !isValidIPv4(ip) || recordType == "AAAA" && !isValidIPv6(ip) {
+		http.Error(w, "Invalid IP address", http.StatusBadRequest)
+		return
+	}
+	if !isValidTTL(ttl) {
+		http.Error(w, "Invalid ttl", http.StatusBadRequest)
+		return
+	}
+
 	ttlNum, err := stringToUint(ttl)
 	if err != nil {
 		http.Error(w, "Invalid ttl", http.StatusBadRequest)
 		return
 	}
+
 	record := dnsclient.Record{
-		Type: "A",
+		Type: recordType,
 		FQDN: fmt.Sprintf("%s.%s.", hostname, "rusty-leipzig.com"),
 		IP:   ip,
 		TTL:  ttlNum,
 	}
-
 	if _, excluded := excludedFQDNs[record.FQDN]; excluded {
 		http.Error(w, "Addition of this record is not allowed", http.StatusBadRequest)
 		return
