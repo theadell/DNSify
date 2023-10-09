@@ -120,6 +120,7 @@ func (app *App) AddRecordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	slog.Info("Successfully added a new dns record.", "record", record)
 	tmpl, ok := app.templateCache["record_fragment"]
 	if !ok {
 		http.Error(w, "Couldn't find fragment", http.StatusInternalServerError)
@@ -266,5 +267,6 @@ func (app *App) DeleteRecordHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	slog.Info("Successfully deleted a dns record.", "record", record)
 	w.WriteHeader(http.StatusOK)
 }
