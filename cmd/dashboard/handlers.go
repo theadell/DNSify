@@ -75,12 +75,10 @@ func (app *App) AddRecordHandler(w http.ResponseWriter, r *http.Request) {
 
 	hostname, ip, ttl, recordType := r.FormValue("hostname"), r.FormValue("ip"), r.FormValue("ttl"), r.FormValue("type")
 
-	// Check for '@' value in IP and replace it
 	if ip == "@" {
 		ip = "157.230.106.145"
 	}
 
-	// Validate each input field
 	if !isValidType(recordType) {
 		http.Error(w, "Invalid record type", http.StatusBadRequest)
 		return
@@ -247,7 +245,7 @@ func (app *App) DeleteRecordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !isValidFQDN(fqdn) || !isValidIP(ip) || !isValidTTL(ttl) {
+	if !isValidFQDN(fqdn) || !isValidIPv4(ip) || !isValidTTL(ttl) {
 		http.Error(w, "Invalid input values", http.StatusBadRequest)
 		return
 	}
