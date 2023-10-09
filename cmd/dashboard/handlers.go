@@ -222,7 +222,7 @@ func (app *App) handleOAuthCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ip := strings.Split(r.RemoteAddr, ":")[0]
+	ip := getRealIP(r)
 
 	slog.Info("User logged in", "upn", claims.UPN, "ip", ip)
 	app.sessionManager.Put(r.Context(), AuthenticatedKey, true)
