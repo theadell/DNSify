@@ -36,10 +36,6 @@ var excludedFQDNs = map[string]struct{}{
 }
 
 func (app *App) IndexHandler(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		app.notFoundHandler(w, r)
-		return
-	}
 	tmpl, _ := app.templateCache["index"]
 	tmpl.Execute(w, nil)
 }
@@ -130,17 +126,7 @@ func (app *App) AddRecordHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 }
-func (app *App) SubmitHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodPost:
-		app.AddRecordHandler(w, r)
-	case http.MethodDelete:
-		app.DeleteRecordHandler(w, r)
-	default:
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-}
+
 func (app *App) notFoundHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotFound)
 	tmpl, _ := app.templateCache["error"]

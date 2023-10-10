@@ -4,13 +4,15 @@ go 1.21.0
 
 require (
 	github.com/alexedwards/scs/v2 v2.5.1
-	github.com/fsnotify/fsnotify v1.6.0
+	github.com/go-chi/chi v1.5.5
+	github.com/go-chi/chi/v5 v5.0.10
 	github.com/miekg/dns v1.1.56
 	github.com/spf13/viper v1.16.0
 	golang.org/x/oauth2 v0.12.0
 )
 
 require (
+	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect

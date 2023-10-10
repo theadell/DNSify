@@ -11,7 +11,7 @@ import (
 func (app *App) RunServer() error {
 	app.server = &http.Server{
 		Addr:         fmt.Sprintf("%s:%d", app.config.Host, app.config.Port),
-		Handler:      app.sessionManager.LoadAndSave(app.Routes()),
+		Handler:      app.Routes(),
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 5 * time.Second,
 	}

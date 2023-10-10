@@ -15,8 +15,8 @@ func (app *App) RequireAuthentication(next http.Handler) http.Handler {
 	})
 }
 
-func (app *App) redirectIfLoggedIn(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func (app *App) redirectIfLoggedIn(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		isAuthenticated := app.sessionManager.GetBool(r.Context(), AuthenticatedKey)
 		if isAuthenticated {
 			referer := r.Header.Get("Referer")
@@ -26,6 +26,6 @@ func (app *App) redirectIfLoggedIn(next http.HandlerFunc) http.HandlerFunc {
 			http.Redirect(w, r, referer, http.StatusSeeOther)
 			return
 		}
-		next(w, r)
-	}
+		next.ServeHTTP(w, r)
+	})
 }

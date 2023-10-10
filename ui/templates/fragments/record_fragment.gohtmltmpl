@@ -1,4 +1,3 @@
-
 {{ define "record_fragment" }}
 <tr>
     <td>{{.Type}}</td>
