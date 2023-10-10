@@ -5,10 +5,8 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"net"
-	"net/http"
 	"regexp"
 	"strconv"
-	"strings"
 )
 
 func isValidFQDN(fqdn string) bool {
@@ -67,15 +65,4 @@ func stringToUint(s string) (uint, error) {
 
 	// Convert uint64 to uint
 	return uint(u64), nil
-}
-
-func getRealIP(r *http.Request) string {
-	if ip := r.Header.Get("X-Real-IP"); ip != "" {
-		return ip
-	}
-	if ips := r.Header.Get("X-Forwarded-For"); ips != "" {
-		splitIps := strings.Split(ips, ",")
-		return strings.TrimSpace(splitIps[0])
-	}
-	return strings.Split(r.RemoteAddr, ":")[0]
 }

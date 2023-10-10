@@ -209,9 +209,7 @@ func (app *App) handleOAuthCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ip := getRealIP(r)
-
-	slog.Info("User logged in", "upn", claims.UPN, "ip", ip)
+	slog.Info("User logged in", "upn", claims.UPN, "ip", r.RemoteAddr)
 	app.sessionManager.Put(r.Context(), AuthenticatedKey, true)
 	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 }
