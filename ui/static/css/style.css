@@ -161,10 +161,9 @@ button:not(:disabled):hover {
   background-color: #0056b3;
 }
 
-.btn-delete {
+.btn {
   cursor: pointer;
   margin-top: auto;
-  background-color: #d9534f;
   color: white;
   border: none;
   padding: 10px;
@@ -173,13 +172,24 @@ button:not(:disabled):hover {
   transition: background-color 0.3s ease-in-out;
 }
 
-.btn-delete:disabled {
+.btn:disabled {
   background-color: #cccccc;
   cursor: not-allowed;
 }
 
+.btn-delete {
+  background-color: #d9534f;
+}
+
 .btn-delete:not(:disabled):hover {
-  background-color: #c9302c; /* A darker shade of the red */
+  background-color: #c9302c;
+}
+.btn-generate {
+  background-color: #5cb85c;
+}
+
+.btn-generate:not(:disabled):hover {
+  background-color: #419641;
 }
 
 .table-container {
@@ -436,6 +446,7 @@ tbody tr:not(:last-child) td {
 .login-help:hover {
   color: #2980b9;
 }
+
 @media screen and (max-width: 920px) {
   .wrapper {
     flex-direction: column;
@@ -458,6 +469,48 @@ tbody tr:not(:last-child) td {
 tr.htmx-swapping td {
   opacity: 0;
   transition: opacity 1s ease-out;
+}
+
+/* config  */
+
+.config-container {
+  position: relative;
+  border: 1px solid #e1e4e8;
+  background-color: #f6f8fa;
+  border: 1px solid #ccc;
+  margin: 0 auto;
+  max-width: 100%;
+  height: 90vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.config-text {
+  padding: 0 1rem;
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.6;
+  font-family: "Fira Code", monospace;
+}
+.config-text code {
+  text-wrap: nowrap;
+}
+
+.copy-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: #333;
+  color: #fff;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background-color 0.3s;
+}
+
+.copy-btn:hover {
+  background-color: #555;
 }
 
 /* spinner  */

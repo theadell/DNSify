@@ -1,0 +1,26 @@
+{{ define "title" }} 
+Nginx Config 
+{{ end }} 
+{{ define "content" }}
+<div class="container" >
+  <div class="config-container">
+    <pre class="config-text">
+      <code>
+         {{ template "nginx" . }}
+      </code>
+    </pre>
+    <button class="copy-btn" onclick="copyToClipboard()">📋 Copy to Clipboard</button>
+  </div>
+</div>
+<script>
+function copyToClipboard() {
+    const range = document.createRange();
+    range.selectNode(document.querySelector('.config-text code'));
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+    document.execCommand('copy');
+    window.getSelection().removeAllRanges();
+    alert('Config copied to clipboard!');
+}
+</script>
+{{ end }}

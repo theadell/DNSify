@@ -2,9 +2,12 @@ package dnsclient
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"log/slog"
 	"os/exec"
+	"strconv"
 	"time"
 )
 
@@ -14,6 +17,12 @@ const (
 	cmdTimeout    = 10 * time.Second
 	sleepDuration = 5 * time.Second
 )
+
+func hashRecord(record Record) string {
+	data := record.Type + record.FQDN + record.IP + strconv.FormatUint(uint64(record.TTL), 10)
+	hash := sha256.Sum256([]byte(data))
+	return hex.EncodeToString(hash[:])
+}
 
 func (c *BindClient) syncJournalToZoneFile() error {
 	for retries := 0; retries < maxRetries; retries++ {

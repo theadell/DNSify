@@ -11,30 +11,37 @@ import (
 func (app *App) Routes() http.Handler {
 	r := chi.NewRouter()
 
-	// Middleware
-	// r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(app.sessionManager.LoadAndSave)
 
-	// static files
 	fs := http.FileServer(http.FS(ui.StatifFS))
 	r.Handle("/static/*", fs)
 
-	// Handlers with redirectIfLoggedIn middleware
-	r.With(app.redirectIfLoggedIn).HandleFunc("/", app.IndexHandler)
-	r.With(app.redirectIfLoggedIn).HandleFunc("/login", app.initiateOAuthProcess)
-	r.With(app.redirectIfLoggedIn).HandleFunc("/oauth/callback", app.handleOAuthCallback)
-
-	// Protected Routes
-	r.With(app.RequireAuthentication).HandleFunc("/dashboard", app.DashboardHandler)
-	r.Route("/records", func(r chi.Router) {
-		r.Post("/", app.AddRecordHandler)
-		r.Delete("/", app.DeleteRecordHandler)
+	// public routes
+	r.Group(func(r chi.Router) {
+		r.Use(app.redirectIfLoggedIn)
+		r.Get("/", app.IndexHandler)
+		r.Get("/login", app.initiateOAuthProcess)
+		r.Get("/oauth/callback", app.handleOAuthCallback)
 	})
 
-	// Not found
+	// protected routes
+	r.Group(func(r chi.Router) {
+		r.Use(app.RequireAuthentication)
+
+		r.Route("/dashboard", func(r chi.Router) {
+			r.Get("/", app.DashboardHandler)
+			r.Post("/config/nginx", app.configHandler)
+		})
+
+		r.Route("/records", func(r chi.Router) {
+			r.Post("/", app.AddRecordHandler)
+			r.Delete("/", app.DeleteRecordHandler)
+		})
+	})
+
 	r.NotFound(app.notFoundHandler)
 
 	return r

@@ -1,8 +1,6 @@
 package main
 
 import (
-	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"log"
 	"log/slog"
@@ -10,21 +8,6 @@ import (
 	"strings"
 
 	"github.com/theadell/dns-api/internal/dnsclient"
-)
-
-const (
-	StateKey               string = "state"
-	ClientIdKey            string = "client_id"
-	CodeVerifierKey        string = "code_verifier"
-	CodeChallengeKey       string = "code_challenge"
-	CodeChallengeMethodKey string = "code_challenge_method"
-	CodeKey                string = "code"
-	IdTokenKey             string = "id_token"
-	EmailKey               string = "email"
-	NameKey                string = "name"
-	AuthenticatedKey       string = "authenticated"
-	SubjectKey             string = "sub"
-	UserIdKey              string = "user_id"
 )
 
 var excludedFQDNs = map[string]struct{}{
@@ -45,6 +28,7 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 	var filteredRecords []dnsclient.Record
 	for _, record := range allRecords {
 		if _, excluded := excludedFQDNs[record.FQDN]; !excluded {
+			fmt.Println(record.Hash)
 			filteredRecords = append(filteredRecords, record)
 		}
 	}
@@ -62,6 +46,34 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (app *App) configHandler(w http.ResponseWriter, r *http.Request) {
+	hash := r.FormValue("hash")
+	if hash == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Empty Hash\n"))
+		return
+	}
+	record := app.bindClient.GetRecordByHash(hash)
+	if record == nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("No matching record StatusNotFound\n"))
+		return
+	}
+	aaaaRecord := app.bindClient.GetRecordForFQDN(record.FQDN, "AAAA")
+	c := convertToTemplateConfig(*record, aaaaRecord)
+	t, ok := app.templateCache["nginx-config"]
+	if !ok {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Didn't find the template"))
+	}
+	err := t.Execute(w, c)
+	if err != nil {
+		log.Printf("Error executing template: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+}
 func (app *App) AddRecordHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err := r.ParseForm(); err != nil {
@@ -131,87 +143,6 @@ func (app *App) notFoundHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotFound)
 	tmpl, _ := app.templateCache["error"]
 	tmpl.Execute(w, nil)
-}
-
-func (app *App) initiateOAuthProcess(w http.ResponseWriter, r *http.Request) {
-
-	state, err := GenerateSecureRandom(32)
-	if err != nil {
-		http.Error(w, "Failed to generate state", http.StatusInternalServerError)
-	}
-	app.sessionManager.Put(r.Context(), StateKey, state)
-	// codeVerifier, err := GenerateSecureRandom(32)
-	// if err != nil {
-	// 	http.Error(w, "Failed to generate code verifier", http.StatusInternalServerError)
-	// 	return
-	// }
-	// app.SessionStore.Put(r.Context(), CodeVerifierKey, codeVerifier)
-	// codeChallenge := GenerateCodeChallenge(codeVerifier)
-	// url := app.OauthClient.AuthCodeURL(state, oauth2.SetAuthURLParam(CodeChallengeKey, codeChallenge), oauth2.SetAuthURLParam(CodeChallengeMethodKey, "S256"))
-	url := app.oauthClient.AuthCodeURL(state)
-	http.Redirect(w, r, url, http.StatusSeeOther)
-}
-
-func (app *App) handleOAuthCallback(w http.ResponseWriter, r *http.Request) {
-	state := app.sessionManager.GetString(r.Context(), StateKey)
-
-	if state == "" {
-		http.Error(w, "No state found in session", http.StatusBadRequest)
-		return
-	}
-	queryState := r.URL.Query().Get(StateKey)
-
-	if state != queryState {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "invalid session state"})
-		return
-	}
-
-	code := r.URL.Query().Get("code")
-	token, err := app.oauthClient.Exchange(r.Context(), code)
-
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to exchange token"})
-		return
-	}
-	if !token.Valid() {
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Token is invalid"})
-		return
-	}
-	rawIDToken, ok := token.Extra("id_token").(string)
-	if !ok {
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "No id_token field in oauth2 token."})
-		return
-	}
-
-	parts := strings.Split(rawIDToken, ".")
-	if len(parts) != 3 {
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "ID token format is invalid."})
-		return
-	}
-
-	payload, err := base64.RawURLEncoding.DecodeString(parts[1])
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to decode payload of ID token."})
-		return
-	}
-	var claims struct {
-		UPN string `json:"upn"`
-	}
-	if err := json.Unmarshal(payload, &claims); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to decode ID Token claims."})
-		return
-	}
-
-	slog.Info("User logged in", "upn", claims.UPN, "ip", r.RemoteAddr)
-	app.sessionManager.Put(r.Context(), AuthenticatedKey, true)
-	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 }
 
 func (app *App) DeleteRecordHandler(w http.ResponseWriter, r *http.Request) {

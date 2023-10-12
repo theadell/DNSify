@@ -104,7 +104,7 @@ Dashboard
           <th>Value</th>
           <th>TTL (seconds)</th>
           <th></th>
-          <!-- For the "More" Action -->
+          <th></th>
         </tr>
       </thead>
       <tbody>

@@ -17,12 +17,15 @@ type Record struct {
 	FQDN string
 	IP   string
 	TTL  uint
+	Hash string
 }
 
 type DNSClient interface {
 	GetRecords() []Record
-	AddRecord(record Record) error
-	RemoveRecord(record Record) error
+	AddRecord(Record) error
+	RemoveRecord(Record) error
+	GetRecordByHash(string) *Record
+	GetRecordForFQDN(string, string) *Record
 	Close()
 }
 
@@ -112,6 +115,31 @@ func (c *BindClient) GetRecords() []Record {
 	return recordsCopy
 }
 
+func (c *BindClient) GetRecordByHash(targetHash string) *Record {
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
+
+	for _, record := range c.cache {
+		if record.Hash == targetHash {
+			recordCopy := record
+			return &recordCopy
+		}
+	}
+	return nil
+}
+
+func (c *BindClient) GetRecordForFQDN(targetFQDN, recordType string) *Record {
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
+
+	for _, record := range c.cache {
+		if record.Type == recordType && record.FQDN == targetFQDN {
+			recordCopy := record
+			return &recordCopy
+		}
+	}
+	return nil
+}
 func readRecordsFromZone(zoneFilePath string) ([]Record, error) {
 	zoneFile, err := os.Open(zoneFilePath)
 	if err != nil {
@@ -139,6 +167,10 @@ func readRecordsFromZone(zoneFilePath string) ([]Record, error) {
 	if err := zp.Err(); err != nil {
 		return nil, err
 	}
+	for i := range records {
+		records[i].Hash = hashRecord(records[i])
+	}
+
 	return records, nil
 }
 
@@ -161,6 +193,7 @@ func (c *BindClient) AddRecord(record Record) error {
 	}
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
+	record.Hash = hashRecord(record)
 	c.cache = append(c.cache, record)
 	return nil
 }
