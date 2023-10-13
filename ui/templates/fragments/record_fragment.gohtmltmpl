@@ -1,24 +1,20 @@
 {{ define "record_fragment" }}
 <tr>
-    <td>{{.Type}}</td>
-    <td>{{.FQDN}}</td>
-    <td>directs to {{.IP}}</td>
-    <td>{{.TTL}}</td>
-    <td> 
-      <form action="/dashboard/config/nginx" method="POST">
-            <input type="hidden" name="hash" value="{{.Hash}}">
-            <button class="btn btn-generate" type="submit" class="btn-generate">Config</button>
-        </form>
-    </td>
-    <td>
-     <button
-        class="btn btn-delete"
-        hx-delete="/records?Type={{.Type}}&FQDN={{.FQDN}}&IP={{.IP}}&TTL={{.TTL}}"
-        hx-confirm="Are you sure you want to delete this record?"
-        hx-target="closest tr"
-        hx-swap="outerHTML swap:1s">
-        Delete
-      </button>
-    </td>
+  <td>{{.Type}}</td>
+  <td>{{.FQDN}}</td>
+  <td>directs to {{.IP}}</td>
+  <td>{{.TTL}}</td>
+  <td>
+    <form action="/dashboard/config/nginx" method="POST">
+      <input type="hidden" name="hash" value="{{.Hash}}">
+      <button class="btn btn-generate" type="submit" class="btn-generate">Config</button>
+    </form>
+  </td>
+  <td>
+    <button class="btn btn-delete" hx-delete="/records?Type={{.Type}}&FQDN={{.FQDN}}&IP={{.IP}}&TTL={{.TTL}}"
+      hx-confirm="Are you sure you want to delete this record?" hx-target="closest tr" hx-swap="outerHTML swap:1s">
+      Delete
+    </button>
+  </td>
 </tr>
 {{ end }}

@@ -28,7 +28,6 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 	var filteredRecords []dnsclient.Record
 	for _, record := range allRecords {
 		if _, excluded := excludedFQDNs[record.FQDN]; !excluded {
-			fmt.Println(record.Hash)
 			filteredRecords = append(filteredRecords, record)
 		}
 	}
@@ -60,13 +59,66 @@ func (app *App) configHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	aaaaRecord := app.bindClient.GetRecordForFQDN(record.FQDN, "AAAA")
-	c := convertToTemplateConfig(*record, aaaaRecord)
+	c := NewNginxConfig(*record, aaaaRecord, "http://localhost:8080")
 	t, ok := app.templateCache["nginx-config"]
 	if !ok {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Didn't find the template"))
 	}
 	err := t.Execute(w, c)
+	if err != nil {
+		log.Printf("Error executing template: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+}
+
+func (app *App) configAdjusterHandler(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		http.Error(w, "Failed to parse form", http.StatusBadRequest)
+		return
+	}
+	hash := r.FormValue("hash")
+	if hash == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Empty Hash\n"))
+		return
+	}
+	record := app.bindClient.GetRecordByHash(hash)
+	if record == nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("No matching record StatusNotFound\n"))
+		return
+	}
+	aaaaRecord := app.bindClient.GetRecordForFQDN(record.FQDN, "AAAA")
+	listenAddress := r.FormValue("listen_address")
+	useHttp2 := r.FormValue("use_http2") == "on"
+	wsHeaders := r.FormValue("ws_headers") == "on"
+	cloudflareResolver := r.FormValue("cloudflare_resolver") == "on"
+	googlePublicDNS := r.FormValue("google_public_dns") == "on"
+	enableLogging := r.FormValue("enable_logging") == "on"
+	enableRateLimiting := r.FormValue("enable_rate_limiting") == "on"
+	strictTransport := r.FormValue("strict_transport") == "on"
+	includeSubdomains := r.FormValue("include_subdomains") == "on"
+
+	c := NewNginxConfig(*record, aaaaRecord, listenAddress)
+	c.UseGooglePublicDNS = googlePublicDNS
+	c.UseCloudflareResolver = cloudflareResolver
+	c.EnableHSTS = strictTransport
+	c.IncludeSubDomains = includeSubdomains
+	c.EnableLogging = enableLogging
+	c.EnableRateLimit = enableRateLimiting
+	c.UseHttp2 = useHttp2
+	c.AddWsHeaders = wsHeaders
+
+	t, ok := app.templateCache["nginx"]
+	if !ok {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Didn't find the template"))
+	}
+	err = t.Execute(w, c)
 	if err != nil {
 		log.Printf("Error executing template: %v", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)

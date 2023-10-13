@@ -3,7 +3,7 @@
   <head>
 
     <title>{{ template "title" . }}</title>
-
+    
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
@@ -29,6 +29,7 @@
 
    <link rel="icon" href="/static/img/favicon.png" type="image/png">
     <link href="/static/css/style.css" rel="stylesheet" />
+    {{ block "additionalStyles" . }}{{ end }}
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

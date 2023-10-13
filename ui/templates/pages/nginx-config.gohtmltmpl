@@ -1,26 +1,130 @@
-{{ define "title" }} 
-Nginx Config 
-{{ end }} 
+{{ define "title" }}
+Nginx Config
+{{ end }}
+{{ define "additionalStyles" }}
+<link rel="stylesheet" href="/static/css/config-view.css">
+<link rel="stylesheet" href="/static/highlight/styles/default.min.css">
+{{ end }}
 {{ define "content" }}
-<div class="container" >
-  <div class="config-container">
-    <pre class="config-text">
-      <code>
-         {{ template "nginx" . }}
-      </code>
-    </pre>
-    <button class="copy-btn" onclick="copyToClipboard()">📋 Copy to Clipboard</button>
-  </div>
+
+<div class="config">
+      
+<form class="config__form" 
+      hx-put="/dashboard/config/nginx"
+      hx-target="#nginx-config-snippet"
+      hx-swap="innerHTML">
+
+    <div class="form__section">
+    <input type="hidden" name="hash" value="{{.Hash}}">
+    <h4 class="section__title">Server</h4>
+    <div class="form__field">
+        <label for="domain" class="field__label">Domain:</label>
+        <input type="text" id="domain" name="domain" class="field__input" value="{{ .Domain }}" readonly disabled>
+    </div>
+
+    <div class="form__field form__field--listen">
+        <label for="listen-address" class="field__label">Service/Container Address:</label>
+        <input type="text" id="listen-address" name="listen_address" class="field__input" placeholder="e.g., http://localhost:8080">
+    </div>
+
+    <div class="form__field form__field--checkbox">
+        <input type="checkbox" id="use-http2" name="use_http2" class="field__checkbox">
+        <label for="use-http2" class="field__label"> Use HTTP2 </label>
+    </div>
+ 
+    <div class="form__field form__field--checkbox">
+        <input type="checkbox" id="ws-headers" name="ws_headers" class="field__checkbox">
+        <label for="ws-headers" class="field__label">Include WebSocket Headers</label>
+    </div>
+ 
+    </div>
+
+    <div class="form__section">
+        <h4 class="section__title">OCSP DNS Resolvers:</h4>
+        <div class="form__field form__field--checkbox">
+            <input type="checkbox" id="cloudflare-resolver" name="cloudflare_resolver" class="field__checkbox">
+            <label for="cloudflare-resolver" class="field__label">Cloudflare Resolver</label>
+        </div>
+        <div class="form__field form__field--checkbox">
+            <input type="checkbox" id="google-public-dns" name="google_public_dns" class="field__checkbox">
+            <label for="google-public-dns" class="field__label">Google Public DNS</label>
+        </div>
+    </div>
+
+    <div class="form__section">
+    <h4 class="section__title"> Logging and rate limiting</h4>
+    <div class="form__field form__field--checkbox">
+        <input type="checkbox" id="enable-logging" name="enable_logging" class="field__checkbox">
+        <label for="enable-logging" class="field__label">Enable Logging</label>
+    </div>
+
+    <div class="form__field form__field--checkbox">
+        <input type="checkbox" id="enable-rate-limiting" name="enable_rate_limiting" class="field__checkbox">
+        <label for="enable-rate-limiting" class="field__label">Enable Rate Limiting</label>
+    </div>
+    </div>
+
+    <div class="form__section">
+        <h4 class="section__title">HTTPS:</h4>
+        <div class="form__field form__field--checkbox">
+            <input type="checkbox" id="force-https" name="force_https" class="field__checkbox" checked disabled>
+            <label for="force-https" class="field__label">Force HTTPS (http://* &rarr; https://*)</label>
+        </div>
+        <div class="form__field form__field--checkbox">
+            <input type="checkbox" id="strict-transport" name="strict_transport" class="field__checkbox">
+            <label for="strict-transport" class="field__label">Enable Strict Transport Security</label>
+        </div>
+        <div class="form__field form__field--checkbox">
+            <input type="checkbox" id="include-subdomains" name="include_subdomains" class="field__checkbox">
+            <label for="include-subdomains" class="field__label">IncludeSubDomains directive</label>
+        </div>
+    </div>
+
+    <div class="form__field">
+        <button type="submit" class="btn form__submit-button">Apply</button>
+    </div>
+</form>
+      <div class="config__display">
+        <pre class="display__code">
+            <code class="nginx" id="nginx-config-snippet">
+                {{- template "nginx" . -}}
+            </code>
+        </pre>
+
+        <div class="display__actions">
+            <button class="actions__btn actions__btn--copy" onclick="copyToClipboard()">📋 Copy to Clipboard</button>
+            <a href="#" id="downloadLink" class="actions__btn actions__btn--download" download="{{- .Domain -}}">📥
+                Download</a>
+        </div>
+    </div>
+
 </div>
 <script>
-function copyToClipboard() {
-    const range = document.createRange();
-    range.selectNode(document.querySelector('.config-text code'));
-    window.getSelection().removeAllRanges();
-    window.getSelection().addRange(range);
-    document.execCommand('copy');
-    window.getSelection().removeAllRanges();
-    alert('Config copied to clipboard!');
-}
+    document.getElementById('downloadLink').addEventListener('click', function () {
+        var text = document.querySelector('.display__code code').textContent.trim();
+        var comment = [
+            "# Configuration file generated by DNSAPI.",
+            "# Generated on: " + new Date().toLocaleString(),
+            "# versions:",
+            "#   DNSAPI v0.1.0",
+            "\n",
+        ].join("\n");
+        var fullText = comment + text;
+        var blob = new Blob([fullText], { type: 'text/plain' });
+        var url = window.URL.createObjectURL(blob);
+        this.href = url;
+    });
+
+    function copyToClipboard() {
+        const range = document.createRange();
+        range.selectNode(document.querySelector('.config-text code'));
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(range);
+        document.execCommand('copy');
+        window.getSelection().removeAllRanges();
+        alert('Config copied to clipboard!');
+    }
 </script>
-{{ end }}
+<script src="/static/highlight/highlight.min.js"> </script>
+<script>hljs.highlightAll();</script>
+{{- end -}}

@@ -34,6 +34,7 @@ func (app *App) Routes() http.Handler {
 		r.Route("/dashboard", func(r chi.Router) {
 			r.Get("/", app.DashboardHandler)
 			r.Post("/config/nginx", app.configHandler)
+			r.Put("/config/nginx", app.configAdjusterHandler)
 		})
 
 		r.Route("/records", func(r chi.Router) {

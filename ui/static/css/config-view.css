@@ -1,0 +1,107 @@
+/* Base styles */
+.config {
+  display: flex;
+  padding: 1rem;
+  margin-top: 1rem;
+  gap: 1rem;
+  justify-content: center;
+  max-width: 100%;
+}
+
+/* Form styles */
+
+.config__form {
+  width: 40%;
+  max-width: 600px;
+  padding-top: 2rem;
+}
+.form__section {
+  padding: 5px;
+  margin-bottom: 10px;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.form__section .form__field {
+  padding-left: 2em;
+}
+
+.section__title {
+  font-weight: 500;
+  margin: 5px 0;
+}
+
+/* Resetting font weight for labels */
+.field__label {
+  font-weight: normal;
+}
+
+.field__label {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.field__input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.form__field--checkbox {
+  display: flex;
+  align-items: center;
+}
+.form__field input[type="checkbox"] {
+  vertical-align: middle;
+}
+.field__checkbox {
+  margin-right: 10px;
+}
+
+.form__submit-button {
+  margin-left: auto;
+}
+/* Display styles */
+.config__display {
+  position: relative;
+  width: 60%;
+}
+
+.display__actions {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  display: flex;
+  gap: 10px;
+  transform: translate(-4%, 120%);
+}
+
+.actions__btn {
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background-color 0.3s;
+}
+
+.actions__btn--copy {
+  background-color: #333;
+  color: #fff;
+}
+
+.actions__btn--copy:hover {
+  background-color: #555;
+}
+
+.actions__btn--download {
+  background-color: #28a745;
+  color: #fff;
+  text-decoration: none;
+}
+
+.actions__btn--download:hover {
+  background-color: #218838;
+}
