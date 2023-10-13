@@ -13,7 +13,6 @@
 .config__form {
   width: 40%;
   max-width: 600px;
-  padding-top: 2rem;
 }
 .form__section {
   padding: 5px;
@@ -69,14 +68,18 @@
   position: relative;
   width: 60%;
 }
-
+.display__label {
+  margin: 0;
+  padding: 0;
+  margin-top: 5px;
+}
 .display__actions {
   position: absolute;
   top: 0px;
   right: 0px;
   display: flex;
   gap: 10px;
-  transform: translate(-4%, 120%);
+  transform: translate(-4%, 200%);
 }
 
 .actions__btn {

@@ -85,6 +85,7 @@ Nginx Config
     </div>
 </form>
       <div class="config__display">
+        <p class="display__label"> /etc/nginx/sites-available/{{.Domain}}</p>
         <pre class="display__code">
             <code class="nginx" id="nginx-config-snippet">
                 {{- template "nginx" . -}}
@@ -92,8 +93,8 @@ Nginx Config
         </pre>
 
         <div class="display__actions">
-            <button class="actions__btn actions__btn--copy" onclick="copyToClipboard()">📋 Copy to Clipboard</button>
-            <a href="#" id="downloadLink" class="actions__btn actions__btn--download" download="{{- .Domain -}}">📥
+            <button class="actions__btn actions__btn--copy" onclick="copyToClipboard()">Copy to Clipboard</button>
+            <a href="#" id="downloadLink" class="actions__btn actions__btn--download" download="{{- .Domain -}}">
                 Download</a>
         </div>
     </div>
@@ -117,7 +118,7 @@ Nginx Config
 
     function copyToClipboard() {
         const range = document.createRange();
-        range.selectNode(document.querySelector('.config-text code'));
+        range.selectNode(document.querySelector('.display__code code'));
         window.getSelection().removeAllRanges();
         window.getSelection().addRange(range);
         document.execCommand('copy');
