@@ -125,6 +125,10 @@ Nginx Config
         window.getSelection().removeAllRanges();
         alert('Config copied to clipboard!');
     }
+
+ document.body.addEventListener('htmx:afterSwap', function(event) {
+  hljs.highlightAll();
+ });
 </script>
 <script src="/static/highlight/highlight.min.js"> </script>
 <script>hljs.highlightAll();</script>
