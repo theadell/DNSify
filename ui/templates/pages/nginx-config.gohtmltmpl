@@ -24,7 +24,7 @@ Nginx Config
 
     <div class="form__field form__field--listen">
         <label for="listen-address" class="field__label">Service/Container Address:</label>
-        <input type="text" id="listen-address" name="listen_address" class="field__input" placeholder="e.g., http://localhost:8080">
+        <input type="text" value="{{.Addr}}" id="listen-address" name="listen_address" class="field__input" placeholder="e.g., http://localhost:8080">
     </div>
 
     <div class="form__field form__field--checkbox">
