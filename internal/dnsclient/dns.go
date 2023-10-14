@@ -20,6 +20,17 @@ type Record struct {
 	Hash string
 }
 
+func NewRecord(typ, fqdn, ip string, ttl uint) Record {
+	r := Record{
+		Type: typ,
+		FQDN: fqdn,
+		IP:   ip,
+		TTL:  ttl,
+	}
+	r.Hash = hashRecord(r)
+	return r
+}
+
 type DNSClient interface {
 	GetRecords() []Record
 	AddRecord(Record) error

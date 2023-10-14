@@ -162,15 +162,15 @@ func (app *App) AddRecordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	record := dnsclient.Record{
-		Type: recordType,
-		FQDN: fmt.Sprintf("%s.%s.", hostname, "rusty-leipzig.com"),
-		IP:   ip,
-		TTL:  ttlNum,
-	}
+	record := dnsclient.NewRecord(recordType, fmt.Sprintf("%s.%s.", hostname, "rusty-leipzig.com"), ip, ttlNum)
+
 	if _, excluded := excludedFQDNs[record.FQDN]; excluded {
 		http.Error(w, "Addition of this record is not allowed", http.StatusBadRequest)
 		return
+	}
+
+	if app.bindClient.GetRecordByHash(record.Hash) != nil {
+		http.Error(w, "Duplication Error: Record Already exists", http.StatusBadRequest)
 	}
 
 	err = app.bindClient.AddRecord(record)
