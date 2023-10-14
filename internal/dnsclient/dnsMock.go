@@ -2,6 +2,7 @@ package dnsclient
 
 import (
 	"fmt"
+	"log/slog"
 	"sync"
 )
 
@@ -17,23 +18,49 @@ func NewMockDNSClient() *MockDNSClient {
 	}
 }
 func NewMockDNSClientWithTestRecords() *MockDNSClient {
-	return &MockDNSClient{
-		Records: []Record{
-			{Type: "A", FQDN: "test1.rusty-leipzig.com.", IP: "127.0.0.1"},
-			{Type: "A", FQDN: "test2.rusty-leipzig.com.", IP: "127.0.0.2"},
-			{Type: "AAAA", FQDN: "test3.rusty-leipzig.com.", IP: "2001:db8::ff00:42:8329"},
-		},
-		mutex: sync.RWMutex{},
+	m := &MockDNSClient{
+		Records: make([]Record, 0),
+		mutex:   sync.RWMutex{},
 	}
+	m.AddRecord(NewRecord("A", "foo.rusty-leipzig.com.", "192.168.1.1", 100))
+	m.AddRecord(NewRecord("AAAA", "foo.rusty-leipzig.com.", "::1", 100))
+	m.AddRecord(NewRecord("A", "bar.rusty-leipzig.com.", "192.168.1.1", 100))
+	m.AddRecord(NewRecord("AAAA", "bar.rusty-leipzig.com.", "::1", 100))
+	return m
 }
 
 func (m *MockDNSClient) GetRecords() []Record {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
-
+	slog.Info("Get Records called", "len of records", len(m.Records), "records", m.Records)
 	recordsCopy := make([]Record, len(m.Records))
 	copy(recordsCopy, m.Records)
 	return recordsCopy
+}
+
+func (m *MockDNSClient) GetRecordForFQDN(targetFQDN, recordType string) *Record {
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
+
+	for _, record := range m.Records {
+		if record.Type == recordType && record.FQDN == targetFQDN {
+			recordCopy := record
+			return &recordCopy
+		}
+	}
+	return nil
+}
+func (m *MockDNSClient) GetRecordByHash(targetHash string) *Record {
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
+
+	for _, record := range m.Records {
+		if record.Hash == targetHash {
+			recordCopy := record
+			return &recordCopy
+		}
+	}
+	return nil
 }
 
 func (m *MockDNSClient) AddRecord(record Record) error {
@@ -56,4 +83,8 @@ func (m *MockDNSClient) RemoveRecord(record Record) error {
 		}
 	}
 	return fmt.Errorf("record not found")
+}
+
+func (m *MockDNSClient) Close() {
+	return
 }
