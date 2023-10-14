@@ -12,7 +12,6 @@ func (app *App) Routes() http.Handler {
 	r := chi.NewRouter()
 
 	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(app.sessionManager.LoadAndSave)
 
