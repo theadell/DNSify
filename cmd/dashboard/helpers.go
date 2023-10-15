@@ -13,6 +13,9 @@ import (
 	"regexp"
 	"runtime/debug"
 	"strconv"
+	"strings"
+
+	"github.com/theadell/dns-api/internal/dnsclient"
 )
 
 func isValidFQDN(fqdn string) bool {
@@ -121,4 +124,33 @@ func (app *App) serverError(w http.ResponseWriter, err error) {
 		"trace", trace,
 	)
 	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+}
+func (app *App) clientError(w http.ResponseWriter, status int, messages ...string) {
+	if len(messages) == 0 {
+		http.Error(w, http.StatusText(status), status)
+		return
+	}
+	combinedMessage := strings.Join(messages, "; ")
+	http.Error(w, combinedMessage, status)
+}
+
+func (app *App) createNginxConfigFromForm(r *http.Request, record *dnsclient.Record) *NginxConfig {
+	aaaaRecord := app.bindClient.GetRecordForFQDN(record.FQDN, "AAAA")
+	listenAddress := r.FormValue("listen_address")
+
+	c := NewNginxConfig(*record, aaaaRecord, listenAddress)
+	c.UseGooglePublicDNS = app.parseFormBool(r, "google_public_dns")
+	c.UseCloudflareResolver = app.parseFormBool(r, "cloudflare_resolver")
+	c.EnableHSTS = app.parseFormBool(r, "strict_transport")
+	c.IncludeSubDomains = app.parseFormBool(r, "include_subdomains")
+	c.EnableLogging = app.parseFormBool(r, "enable_logging")
+	c.EnableRateLimit = app.parseFormBool(r, "enable_rate_limiting")
+	c.UseHttp2 = app.parseFormBool(r, "use_http2")
+	c.AddWsHeaders = app.parseFormBool(r, "ws_headers")
+
+	return &c
+}
+
+func (app *App) parseFormBool(r *http.Request, key string) bool {
+	return r.FormValue(key) == "on"
 }
