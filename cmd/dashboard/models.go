@@ -40,3 +40,9 @@ func NewNginxConfig(aRecord dnsclient.Record, aaaaRecord *dnsclient.Record, addr
 	}
 	return config
 }
+
+type HTMXDeleteDuplicateRowEvent struct {
+	DeleteDuplicateRow struct {
+		Hash string `json:"hash"`
+	} `json:"deleteDuplicateRow"`
+}

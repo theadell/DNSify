@@ -160,6 +160,18 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 });
+
+document.body.addEventListener("deleteDuplicateRow", function (evt) {
+  let el = document.getElementById(evt.detail.hash);
+  if (el) {
+    el.classList.add("fade-out");
+
+    setTimeout(function () {
+      el.remove();
+    }, 1000);
+  }
+});
+
 document.body.addEventListener("htmx:responseError", function (event) {
   console.log("I have been triggered");
   const serverError = document.getElementById("server-error");

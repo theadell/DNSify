@@ -41,7 +41,7 @@ Dashboard
       id="record-form"
       class="record-form"
       hx-post="/records"
-      hx-swap="beforeend"
+      hx-swap="afterbegin settle=1s"
       hx-target="#records-table tbody"
       hx-indicator="#spinner"
     >

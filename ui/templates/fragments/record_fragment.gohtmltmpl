@@ -1,5 +1,5 @@
 {{ define "record_fragment" }}
-<tr>
+<tr id="{{.Hash}}">
   <td>{{.Type}}</td>
   <td>{{.FQDN}}</td>
   <td>directs to {{.IP}}</td>

@@ -1,8 +1,8 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
-	"log"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -19,8 +19,7 @@ var excludedFQDNs = map[string]struct{}{
 }
 
 func (app *App) IndexHandler(w http.ResponseWriter, r *http.Request) {
-	tmpl, _ := app.templateCache["index"]
-	tmpl.Execute(w, nil)
+	app.render(w, http.StatusOK, "index", nil)
 }
 func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 	allRecords := app.bindClient.GetRecords()
@@ -31,18 +30,7 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 			filteredRecords = append(filteredRecords, record)
 		}
 	}
-	tmpl, ok := app.templateCache["dashboard"]
-
-	if !ok {
-		http.Error(w, "template was not found", http.StatusInternalServerError)
-		return
-	}
-	err := tmpl.Execute(w, filteredRecords)
-	if err != nil {
-		log.Printf("Error executing template: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
+	app.render(w, http.StatusOK, "dashboard", filteredRecords)
 }
 
 func (app *App) configHandler(w http.ResponseWriter, r *http.Request) {
@@ -60,18 +48,7 @@ func (app *App) configHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	aaaaRecord := app.bindClient.GetRecordForFQDN(record.FQDN, "AAAA")
 	c := NewNginxConfig(*record, aaaaRecord, "http://localhost:8080")
-	t, ok := app.templateCache["nginx-config"]
-	if !ok {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("Didn't find the template"))
-	}
-	err := t.Execute(w, c)
-	if err != nil {
-		log.Printf("Error executing template: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-
+	app.render(w, http.StatusOK, "nginx-config", c)
 }
 
 func (app *App) configAdjusterHandler(w http.ResponseWriter, r *http.Request) {
@@ -112,23 +89,11 @@ func (app *App) configAdjusterHandler(w http.ResponseWriter, r *http.Request) {
 	c.EnableRateLimit = enableRateLimiting
 	c.UseHttp2 = useHttp2
 	c.AddWsHeaders = wsHeaders
-
-	t, ok := app.templateCache["nginx"]
-	if !ok {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("Didn't find the template"))
-	}
-	err = t.Execute(w, c)
-	if err != nil {
-		log.Printf("Error executing template: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-
+	app.render(w, http.StatusOK, "nginx-config", c)
 }
 func (app *App) AddRecordHandler(w http.ResponseWriter, r *http.Request) {
-
 	if err := r.ParseForm(); err != nil {
+		slog.Error("Failed to parse form", "error", err)
 		http.Error(w, "Failed to parse form", http.StatusBadRequest)
 		return
 	}
@@ -139,25 +104,15 @@ func (app *App) AddRecordHandler(w http.ResponseWriter, r *http.Request) {
 		ip = "157.230.106.145"
 	}
 
-	if !isValidType(recordType) {
-		http.Error(w, "Invalid record type", http.StatusBadRequest)
-		return
-	}
-	if !isValidHostname(hostname) {
-		http.Error(w, "Invalid hostname", http.StatusBadRequest)
-		return
-	}
-	if recordType == "A" && !isValidIPv4(ip) || recordType == "AAAA" && !isValidIPv6(ip) {
-		http.Error(w, "Invalid IP address", http.StatusBadRequest)
-		return
-	}
-	if !isValidTTL(ttl) {
-		http.Error(w, "Invalid ttl", http.StatusBadRequest)
+	if err := validateRecordReq(hostname, ip, ttl, recordType); err != nil {
+		slog.Error("Invalid record request", "error", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	ttlNum, err := stringToUint(ttl)
 	if err != nil {
+		slog.Error("Invalid TTL", "ttl", ttl)
 		http.Error(w, "Invalid ttl", http.StatusBadRequest)
 		return
 	}
@@ -171,24 +126,49 @@ func (app *App) AddRecordHandler(w http.ResponseWriter, r *http.Request) {
 
 	if app.bindClient.GetRecordByHash(record.Hash) != nil {
 		http.Error(w, "Duplication Error: Record Already exists", http.StatusBadRequest)
+		return
+	}
+
+	// update existing record
+	if dr := app.bindClient.GetRecordByFQDNAndType(record.FQDN, record.Type); dr != nil {
+		if app.bindClient.RemoveRecord(*dr) != nil {
+			slog.Error("Failed to remove record", "error", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		slog.Info("Successfully deleted DNS record.", "record", record)
+		err = app.bindClient.AddRecord(record)
+		if err != nil {
+			slog.Error("Failed to add record", "error", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		slog.Info("Successfully added a new DNS record.", "record", record)
+		payload := HTMXDeleteDuplicateRowEvent{}
+		payload.DeleteDuplicateRow.Hash = dr.Hash
+		jsonHeader, err := json.Marshal(payload)
+		if err != nil {
+			slog.Error("Failed to create header", "error", err)
+			http.Error(w, "Failed to create header", http.StatusInternalServerError)
+			return
+		}
+		// instruct htmx to remove the old record
+		w.Header().Set("HX-Trigger", string(jsonHeader))
+		app.render(w, http.StatusOK, "record_fragment", record)
+		return
 	}
 
 	err = app.bindClient.AddRecord(record)
 	if err != nil {
-		slog.Error("Failed to add record", err)
+		slog.Error("Failed to add record", "error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	slog.Info("Successfully added a new dns record.", "record", record)
-	tmpl, ok := app.templateCache["record_fragment"]
-	if !ok {
-		http.Error(w, "Couldn't find fragment", http.StatusInternalServerError)
-	}
-	if err := tmpl.Execute(w, record); err != nil {
-		http.Error(w, fmt.Sprintf("Error executing response fragment: %s", err.Error()), http.StatusInternalServerError)
-	}
-
+	slog.Info("Successfully added a new DNS record.", "record", record)
+	app.render(w, http.StatusOK, "record_fragment", &record)
 }
 
 func (app *App) notFoundHandler(w http.ResponseWriter, r *http.Request) {
@@ -213,7 +193,7 @@ func (app *App) DeleteRecordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !isValidFQDN(fqdn) || !isValidIPv4(ip) || !isValidTTL(ttl) {
+	if !isValidFQDN(fqdn) || (recordType == "A" && !isValidIPv4(ip) || recordType == "AAAA" && !isValidIPv6(ip)) || !isValidTTL(ttl) {
 		http.Error(w, "Invalid input values", http.StatusBadRequest)
 		return
 	}

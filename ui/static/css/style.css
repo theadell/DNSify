@@ -233,6 +233,15 @@ tbody tr:hover {
 tbody tr:not(:last-child) td {
   border-bottom: 1px solid #e0e0e0; /* Added as a subtle separator between rows */
 }
+
+#records-table tbody tr.htmx-added {
+  opacity: 0;
+}
+
+#records-table tbody tr {
+  opacity: 1;
+  transition: opacity 1s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
 .sep,
 .tablist {
   transition: all 0.5s ease-in-out; /* Adjust the duration and easing function as needed */
@@ -582,4 +591,18 @@ tr.htmx-swapping td {
 }
 .htmx-request.lds-ellipsis {
   display: inline-block;
+}
+
+/* fade out animation */
+.fade-out {
+  animation: fadeOut 1s forwards;
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
 }
