@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net"
 	"os"
+	"slices"
 	"sync"
 	"time"
 
@@ -37,6 +38,7 @@ type DNSClient interface {
 	RemoveRecord(Record) error
 	GetRecordByHash(string) *Record
 	GetRecordForFQDN(string, string) *Record
+	GetRecordByFQDNAndType(string, string) *Record
 	Close()
 }
 
@@ -135,6 +137,19 @@ func (c *BindClient) GetRecordByHash(targetHash string) *Record {
 			recordCopy := record
 			return &recordCopy
 		}
+	}
+	return nil
+}
+
+func (c *BindClient) GetRecordByFQDNAndType(recordFQDN, recordType string) *Record {
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
+	idx := slices.IndexFunc(c.cache, func(record Record) bool {
+		return record.Type == recordType && record.FQDN == recordFQDN
+	})
+	if idx != -1 {
+		recordCopy := c.cache[idx]
+		return &recordCopy
 	}
 	return nil
 }

@@ -2,25 +2,25 @@ package dnsclient
 
 import (
 	"fmt"
-	"log/slog"
+	"slices"
 	"sync"
 )
 
 type MockDNSClient struct {
-	Records []Record
-	mutex   sync.RWMutex
+	cache []Record
+	mutex sync.RWMutex
 }
 
 func NewMockDNSClient() *MockDNSClient {
 	return &MockDNSClient{
-		Records: make([]Record, 0),
-		mutex:   sync.RWMutex{},
+		cache: make([]Record, 0),
+		mutex: sync.RWMutex{},
 	}
 }
 func NewMockDNSClientWithTestRecords() *MockDNSClient {
 	m := &MockDNSClient{
-		Records: make([]Record, 0),
-		mutex:   sync.RWMutex{},
+		cache: make([]Record, 0),
+		mutex: sync.RWMutex{},
 	}
 	m.AddRecord(NewRecord("A", "foo.rusty-leipzig.com.", "192.168.1.1", 100))
 	m.AddRecord(NewRecord("AAAA", "foo.rusty-leipzig.com.", "::1", 100))
@@ -32,9 +32,8 @@ func NewMockDNSClientWithTestRecords() *MockDNSClient {
 func (m *MockDNSClient) GetRecords() []Record {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
-	slog.Info("Get Records called", "len of records", len(m.Records), "records", m.Records)
-	recordsCopy := make([]Record, len(m.Records))
-	copy(recordsCopy, m.Records)
+	recordsCopy := make([]Record, len(m.cache))
+	copy(recordsCopy, m.cache)
 	return recordsCopy
 }
 
@@ -42,7 +41,7 @@ func (m *MockDNSClient) GetRecordForFQDN(targetFQDN, recordType string) *Record 
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 
-	for _, record := range m.Records {
+	for _, record := range m.cache {
 		if record.Type == recordType && record.FQDN == targetFQDN {
 			recordCopy := record
 			return &recordCopy
@@ -50,11 +49,25 @@ func (m *MockDNSClient) GetRecordForFQDN(targetFQDN, recordType string) *Record 
 	}
 	return nil
 }
+
+func (m *MockDNSClient) GetRecordByFQDNAndType(recordFQDN, recordType string) *Record {
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
+	idx := slices.IndexFunc(m.cache, func(record Record) bool {
+		return record.Type == recordType && record.FQDN == recordFQDN
+	})
+	if idx != -1 {
+		recordCopy := m.cache[idx]
+		return &recordCopy
+	}
+	return nil
+}
+
 func (m *MockDNSClient) GetRecordByHash(targetHash string) *Record {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 
-	for _, record := range m.Records {
+	for _, record := range m.cache {
 		if record.Hash == targetHash {
 			recordCopy := record
 			return &recordCopy
@@ -68,7 +81,7 @@ func (m *MockDNSClient) AddRecord(record Record) error {
 	defer m.mutex.Unlock()
 
 	// Here we just simulate adding by appending to our in-memory slice
-	m.Records = append(m.Records, record)
+	m.cache = append(m.cache, record)
 	return nil
 }
 
@@ -76,9 +89,9 @@ func (m *MockDNSClient) RemoveRecord(record Record) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
-	for i, r := range m.Records {
+	for i, r := range m.cache {
 		if r.FQDN == record.FQDN && r.Type == record.Type && r.IP == record.IP {
-			m.Records = append(m.Records[:i], m.Records[i+1:]...)
+			m.cache = append(m.cache[:i], m.cache[i+1:]...)
 			return nil
 		}
 	}
