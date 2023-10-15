@@ -12,7 +12,7 @@ Nginx Config
 <form class="config__form" 
       hx-put="/dashboard/config/nginx"
       hx-target="#nginx-config-snippet"
-      hx-swap="innerHTML">
+      hx-swap="innerHTML transition:true">
 
     <div class="form__section">
     <input type="hidden" name="hash" value="{{.Hash}}">
