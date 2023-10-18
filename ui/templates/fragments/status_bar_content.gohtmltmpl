@@ -1,0 +1,19 @@
+{{ define "status_bar_content"}}
+  <div class="status-bar__item">
+      <img class="status-bar__icon" src="/static/img/check.png" alt="Health Check Status" id="healthCheckIcon">
+      <span class="status-bar__text" id="healthCheckStatus">Healthy</span>
+  </div>
+  <div class="status-bar__item">
+      <span class="status-bar__text" id="lastCheckedTime">Last checked: 10:45 AM</span>
+  </div>
+  <div class="status-bar__item">
+      <span class="status-bar__text" id="activeClients">Active Clients: 45</span>
+  </div>
+  <div class="nginx-status">
+
+  </div>
+  <div class="status-bar__item">
+      <img class="status-bar__icon" src="/static/img/check.png" alt="Sync Status" id="syncStatusIcon">
+      <span class="status-bar__text" id="syncStatus">Synced</span>
+  </div>
+{{ end }}

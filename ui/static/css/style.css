@@ -31,6 +31,43 @@ body {
   font-weight: 500;
   color: #333;
 }
+/* Status Bar Styles */
+.status-bar {
+  border-bottom: 1px solid #e1e4e8;
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  width: 100%;
+}
+
+.status-bar__item {
+  display: flex;
+  align-items: center;
+}
+
+.status-bar__icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 0.5rem;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.status-bar__icon--healthy {
+  background-image: url("/static/img/check.png");
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+.status-bar__icon--unhealthy {
+  background-image: url("/static/img/cancel.png");
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.status-bar__text strong {
+  color: #22863a; /* green color for emphasis */
+}
 .tablist {
   display: flex;
   list-style: none;
