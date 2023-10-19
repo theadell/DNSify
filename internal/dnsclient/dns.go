@@ -33,6 +33,7 @@ func NewRecord(typ, fqdn, ip string, ttl uint) Record {
 }
 
 type DNSClient interface {
+	HealthCheck() bool
 	GetRecords() []Record
 	AddRecord(Record) error
 	RemoveRecord(Record) error
@@ -109,6 +110,12 @@ func NewBindClient(config DNSClientConfig) (*BindClient, error) {
 	return client, nil
 }
 
+func (c *BindClient) HealthCheck() bool {
+	m := new(dns.Msg)
+	m.SetQuestion(c.zone, dns.TypeSOA)
+	r, _, err := c.client.Exchange(m, c.serverAddr)
+	return err == nil && len(r.Answer) > 0
+}
 func (c *BindClient) populateCache() error {
 	recrods, err := readRecordsFromZone(c.zoneFilePath)
 	if err != nil {

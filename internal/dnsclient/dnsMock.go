@@ -101,3 +101,6 @@ func (m *MockDNSClient) RemoveRecord(record Record) error {
 func (m *MockDNSClient) Close() {
 	return
 }
+func (m *MockDNSClient) HealthCheck() bool {
+	return true
+}
