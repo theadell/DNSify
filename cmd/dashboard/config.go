@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/spf13/viper"
-	"github.com/theadell/dns-api/internal/dnsclient"
+	"github.com/theadell/dnsify/internal/dnsclient"
 )
 
 type Config struct {
@@ -26,7 +26,7 @@ type OAuth2ClientConfig struct {
 	RedirectURL  string `mapstructure:"redirectURL"`
 }
 
-func loadConfig() (Config, error) {
+func loadConfig() (*Config, error) {
 	v := viper.New()
 
 	v.SetConfigName("config")
@@ -39,13 +39,13 @@ func loadConfig() (Config, error) {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			fmt.Println("No config file found")
 		} else {
-			return Config{}, err
+			return nil, err
 		}
 	}
 
 	var config Config
 	if err := v.Unmarshal(&config); err != nil {
-		return Config{}, err
+		return nil, err
 	}
-	return config, nil
+	return &config, nil
 }

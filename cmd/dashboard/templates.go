@@ -1,9 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"embed"
+	"fmt"
 	"html/template"
 	"log"
+	"net/http"
 	"path/filepath"
 	"strings"
 )
@@ -64,4 +67,44 @@ func loadTemplates(tmplFS embed.FS) map[string]*template.Template {
 }
 func stripExtension(filename string) string {
 	return strings.TrimSuffix(filename, filepath.Ext(filename))
+}
+
+func (app *App) render(w http.ResponseWriter, status int, page string, data any) {
+	ts, ok := app.templateCache[page]
+	if !ok {
+		err := fmt.Errorf("the template %s does not exist", page)
+		app.serverError(w, err)
+		return
+	}
+
+	buf := new(bytes.Buffer)
+
+	if err := ts.Execute(buf, data); err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(status)
+
+	buf.WriteTo(w)
+}
+
+func (app *App) renderTemplateFragment(w http.ResponseWriter, status int, page string, fragment string, data any) {
+	ts, ok := app.templateCache[page]
+	if !ok {
+		err := fmt.Errorf("the template %s does not exist", page)
+		app.serverError(w, err)
+		return
+	}
+
+	buf := new(bytes.Buffer)
+
+	if err := ts.ExecuteTemplate(buf, fragment, data); err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	buf.WriteTo(w)
 }

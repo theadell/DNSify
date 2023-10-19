@@ -1,4 +1,4 @@
-module github.com/theadell/dns-api
+module github.com/theadell/dnsify
 
 go 1.21.0
 

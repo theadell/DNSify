@@ -3,7 +3,7 @@ package main
 import (
 	"strings"
 
-	"github.com/theadell/dns-api/internal/dnsclient"
+	"github.com/theadell/dnsify/internal/dnsclient"
 )
 
 type NginxConfig struct {
@@ -45,4 +45,8 @@ type HTMXDeleteDuplicateRowEvent struct {
 	DeleteDuplicateRow struct {
 		Hash string `json:"hash"`
 	} `json:"deleteDuplicateRow"`
+}
+
+type TemplateData struct {
+	records *[]dnsclient.Record
 }

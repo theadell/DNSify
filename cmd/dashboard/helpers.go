@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
@@ -15,7 +14,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/theadell/dns-api/internal/dnsclient"
+	"github.com/theadell/dnsify/internal/dnsclient"
 )
 
 func isValidFQDN(fqdn string) bool {
@@ -93,28 +92,6 @@ func validateRecordReq(hostname, ip, ttl, recordType string) error {
 func httpError(w http.ResponseWriter, message string, code int) {
 	slog.Error(message)
 	http.Error(w, message, code)
-}
-
-func (app *App) render(w http.ResponseWriter, status int, page string, data any) {
-	ts, ok := app.templateCache[page]
-	if !ok {
-		err := fmt.Errorf("the template %s does not exist", page)
-		app.serverError(w, err)
-		return
-	}
-
-	buf := new(bytes.Buffer)
-
-	if err := ts.Execute(buf, data); err != nil {
-		app.serverError(w, err)
-		return
-	}
-
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.WriteHeader(status)
-
-	// Write the buffer content to the response writer
-	buf.WriteTo(w)
 }
 func (app *App) serverError(w http.ResponseWriter, err error) {
 	trace := fmt.Sprintf("%s\n%s", err.Error(), debug.Stack())

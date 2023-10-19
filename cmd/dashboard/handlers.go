@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/theadell/dns-api/internal/dnsclient"
+	"github.com/theadell/dnsify/internal/dnsclient"
 )
 
 var excludedFQDNs = map[string]struct{}{
@@ -129,7 +129,7 @@ func (app *App) AddRecordHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		// instruct htmx to remove the old record
 		w.Header().Set("HX-Trigger", string(jsonHeader))
-		app.render(w, http.StatusOK, "record_fragment", record)
+		app.renderTemplateFragment(w, http.StatusOK, "dashboard", "records", record)
 		return
 	}
 
@@ -139,7 +139,7 @@ func (app *App) AddRecordHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	slog.Info("Successfully added a new DNS record.", "record", record)
-	app.render(w, http.StatusOK, "record_fragment", &record)
+	app.renderTemplateFragment(w, http.StatusOK, "dashboard", "records", &record)
 }
 
 func (app *App) notFoundHandler(w http.ResponseWriter, r *http.Request) {

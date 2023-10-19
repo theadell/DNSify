@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"html/template"
 	"log"
 	"log/slog"
@@ -10,8 +11,9 @@ import (
 	"syscall"
 
 	"github.com/alexedwards/scs/v2"
-	"github.com/theadell/dns-api/internal/dnsclient"
-	"github.com/theadell/dns-api/ui"
+	"github.com/theadell/dnsify/internal/dnsclient"
+	"github.com/theadell/dnsify/internal/mock"
+	"github.com/theadell/dnsify/ui"
 	"golang.org/x/oauth2"
 )
 
@@ -25,13 +27,58 @@ type App struct {
 }
 
 func main() {
-
 	cfg, err := loadConfig()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error loading config: %v", err)
 	}
+
+	// toggle flags
+	var useMockDNS, useMockOAuth bool
+	flag.BoolVar(&useMockDNS, "mockdns", false, "Use mock DNS client")
+	flag.BoolVar(&useMockOAuth, "mockoauth", false, "Use mock OAuth2 server")
+	flag.Parse()
+
+	oauth2Client := setupOAuthClient(cfg, useMockOAuth)
+
+	bindClient, err := setupDNSClient(cfg, useMockDNS)
+	if err != nil {
+		log.Fatalf("Error setting up DNS client: %v", err)
+	}
+
 	sessionManager := NewSessionManager(cfg.HTTPServerConfig.SecureCookie)
-	oauth2Clinet := &oauth2.Config{
+	app := &App{
+		config:         cfg.HTTPServerConfig,
+		sessionManager: sessionManager,
+		oauthClient:    oauth2Client,
+		bindClient:     bindClient,
+		templateCache:  loadTemplates(ui.TemplatesFS),
+	}
+
+	handleSignals(app)
+
+	if err := app.RunServer(); err != nil && err != http.ErrServerClosed {
+		log.Fatalf("Server error: %v", err)
+	}
+	slog.Info("Application has stopped")
+}
+
+func setupOAuthClient(cfg *Config, useMockOAuth bool) *oauth2.Config {
+
+	if useMockOAuth {
+		go mock.MockOAuth2Server().ListenAndServe()
+		return &oauth2.Config{
+			ClientID:     cfg.OAuth2ClientConfig.ClientID,
+			ClientSecret: cfg.OAuth2ClientConfig.ClientSecret,
+			RedirectURL:  cfg.OAuth2ClientConfig.RedirectURL,
+			Scopes:       []string{"openid", "microprofile-jwt"},
+			Endpoint: oauth2.Endpoint{
+				AuthURL:  "http://localhost:9999/auth",
+				TokenURL: "http://localhost:9999/token",
+			},
+		}
+	}
+
+	return &oauth2.Config{
 		ClientID:     cfg.OAuth2ClientConfig.ClientID,
 		ClientSecret: cfg.OAuth2ClientConfig.ClientSecret,
 		RedirectURL:  cfg.OAuth2ClientConfig.RedirectURL,
@@ -41,32 +88,23 @@ func main() {
 			TokenURL: "https://accounts.itemis-leipzig.de/realms/Leipzig/protocol/openid-connect/token",
 		},
 	}
+}
 
-	bindClient, err := dnsclient.NewBindClient(cfg.DNSClientConfig)
-	if err != nil {
-		log.Fatal(err)
+func setupDNSClient(cfg *Config, useMockDNS bool) (dnsclient.DNSClient, error) {
+
+	if useMockDNS {
+		return dnsclient.NewMockDNSClientWithTestRecords(), nil
 	}
-	app := &App{
-		config:         cfg.HTTPServerConfig,
-		sessionManager: sessionManager,
-		oauthClient:    oauth2Clinet,
-		bindClient:     bindClient,
-		templateCache:  loadTemplates(ui.TemplatesFS),
-	}
+	return dnsclient.NewBindClient(cfg.DNSClientConfig)
+}
+
+func handleSignals(app *App) {
 	stopChan := make(chan os.Signal, 1)
 	signal.Notify(stopChan, os.Interrupt, syscall.SIGTERM)
 
 	go func() {
-		if err := app.RunServer(); err != nil && err != http.ErrServerClosed {
-			slog.Error("Server error", "error", err)
-		}
-	}()
-
-	select {
-	case sig := <-stopChan:
+		sig := <-stopChan
 		slog.Info("Received stop signal", "signal", sig)
 		app.GracefulShutdown()
-	}
-	slog.Info("Application has stopped")
-
+	}()
 }
