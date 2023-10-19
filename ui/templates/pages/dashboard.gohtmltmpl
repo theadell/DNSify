@@ -2,9 +2,48 @@
 Dashboard 
 {{ end }} 
 
+{{ define "records" }}
+    <tr id="{{.Hash}}">
+      <td>{{.Type}}</td>
+      <td>{{.FQDN}}</td>
+      <td>directs to {{.IP}}</td>
+      <td>{{.TTL}}</td>
+      <td>
+        <form action="/dashboard/config/nginx" method="POST">
+          <input type="hidden" name="hash" value="{{.Hash}}">
+          <button class="btn btn-generate" type="submit" class="btn-generate">Config</button>
+        </form>
+      </td>
+      <td>
+        <button class="btn btn-delete" hx-delete="/records?Type={{.Type}}&FQDN={{.FQDN}}&IP={{.IP}}&TTL={{.TTL}}"
+          hx-confirm="Are you sure you want to delete this record?" hx-target="closest tr" hx-swap="outerHTML swap:1s">
+          Delete
+        </button>
+      </td>
+    </tr>
+{{ end }}
+      
 {{ define "content" }}
 <div class="container" >
   <h3 class="heading">rusty-leipzig.com</h3>
+
+  <div class="status-bar">
+      <!-- DNS Server Status -->
+      <div class="status-bar__item" sse-swap="dnsStatus">
+          <span class="status-bar__icon"></span>
+          <span class="status-bar__text">DNS Server: <strong></strong></span>
+      </div>
+
+      <!-- Active Client Count -->
+      <div class="status-bar__item" sse-swap="activeClients">
+          <span class="status-bar__icon status-bar__icon--users"></span>
+          <span class="status-bar__text">Active Clients: <strong></strong></span>
+      </div>
+  </div>
+
+  <div class="status-bar" hx-get="/latest_updates" hx-trigger="every 30s">
+
+  </div> 
   <p>Create a new record</p>
   <div class="row">
     <ul class="tablist">
@@ -108,8 +147,8 @@ Dashboard
         </tr>
       </thead>
       <tbody>
-        {{range .}}
-          {{ template "record_fragment" . }}
+       {{range .}}
+          {{ template "records" . }}
         {{end}}
       </tbody>
     </table>
