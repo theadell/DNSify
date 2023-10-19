@@ -173,7 +173,6 @@ document.body.addEventListener("deleteDuplicateRow", function (evt) {
 });
 
 document.body.addEventListener("htmx:responseError", function (event) {
-  console.log("I have been triggered");
   const serverError = document.getElementById("server-error");
   const errorMessageElement = document.getElementById("error-message");
 
