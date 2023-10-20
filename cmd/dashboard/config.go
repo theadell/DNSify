@@ -24,6 +24,8 @@ type OAuth2ClientConfig struct {
 	ClientID     string `mapstructure:"clientID"`
 	ClientSecret string `mapstructure:"clientSecret"`
 	RedirectURL  string `mapstructure:"redirectURL"`
+	AuthURL      string `mapstructure:"AuthURL"`
+	TokenURL     string `mapstructure:"TokenURL"`
 }
 
 func loadConfig() (*Config, error) {

@@ -84,8 +84,8 @@ func setupOAuthClient(cfg *Config, useMockOAuth bool) *oauth2.Config {
 		RedirectURL:  cfg.OAuth2ClientConfig.RedirectURL,
 		Scopes:       []string{"openid", "microprofile-jwt"},
 		Endpoint: oauth2.Endpoint{
-			AuthURL:  "https://accounts.itemis-leipzig.de/realms/Leipzig/protocol/openid-connect/auth",
-			TokenURL: "https://accounts.itemis-leipzig.de/realms/Leipzig/protocol/openid-connect/token",
+			AuthURL:  cfg.OAuth2ClientConfig.AuthURL,
+			TokenURL: cfg.OAuth2ClientConfig.TokenURL,
 		},
 	}
 }

@@ -16,3 +16,5 @@ oauth2Client:
   clientID: "dns"
   clientSecret: "yourClientSecret"
   redirectURL: "http://localhost:8080/oauth/callback"
+  AuthURL: "http://localhost:9999/auth"
+  TokenURL: "http://localhost:9999/token"
