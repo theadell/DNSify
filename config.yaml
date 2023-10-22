@@ -1,11 +1,19 @@
 dnsClient:
-  zoneFilePath: "./db.example.com"
   tsigKey: "tsig-key."
   tsigSecret: "tsig-secret"
   host: "157.230.106.145"
   port: 53
   zone: "rusty-leipzig.com."
   syncInterval: 30
+  guards:
+    immutable:
+      - dnsify
+      - dns
+      - ns1
+      - ns2
+      - ns3
+    admin_only:
+      - www
 
 httpServer:
   host: "localhost"

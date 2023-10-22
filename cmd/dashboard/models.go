@@ -3,7 +3,7 @@ package main
 import (
 	"strings"
 
-	"github.com/theadell/dnsify/internal/dnsclient"
+	"github.com/theadell/dnsify/internal/dnsservice"
 )
 
 type NginxConfig struct {
@@ -24,7 +24,7 @@ type NginxConfig struct {
 	UseCloudflareResolver bool
 }
 
-func NewNginxConfig(aRecord dnsclient.Record, aaaaRecord *dnsclient.Record, addr string) NginxConfig {
+func NewNginxConfig(aRecord dnsservice.Record, aaaaRecord *dnsservice.Record, addr string) NginxConfig {
 	cleanFQDN := strings.TrimSuffix(aRecord.FQDN, ".")
 	config := NginxConfig{
 		Hash:    aRecord.Hash,
@@ -48,5 +48,5 @@ type HTMXDeleteDuplicateRowEvent struct {
 }
 
 type TemplateData struct {
-	records *[]dnsclient.Record
+	records *[]dnsservice.Record
 }

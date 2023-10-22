@@ -14,7 +14,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/theadell/dnsify/internal/dnsclient"
+	"github.com/theadell/dnsify/internal/dnsservice"
 )
 
 func isValidFQDN(fqdn string) bool {
@@ -111,8 +111,8 @@ func (app *App) clientError(w http.ResponseWriter, status int, messages ...strin
 	http.Error(w, combinedMessage, status)
 }
 
-func (app *App) createNginxConfigFromForm(r *http.Request, record *dnsclient.Record) *NginxConfig {
-	aaaaRecord := app.bindClient.GetRecordForFQDN(record.FQDN, "AAAA")
+func (app *App) createNginxConfigFromForm(r *http.Request, record *dnsservice.Record) *NginxConfig {
+	aaaaRecord := app.dnsClient.GetRecordForFQDN(record.FQDN, "AAAA")
 	listenAddress := r.FormValue("listen_address")
 
 	c := NewNginxConfig(*record, aaaaRecord, listenAddress)

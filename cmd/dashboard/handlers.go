@@ -7,30 +7,16 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/theadell/dnsify/internal/dnsclient"
+	"github.com/theadell/dnsify/internal/dnsservice"
 )
-
-var excludedFQDNs = map[string]struct{}{
-	"rusty-leipzig.com.":     {},
-	"ns1.rusty-leipzig.com.": {},
-	"ns2.rusty-leipzig.com.": {},
-	"www.rusty-leipzig.com.": {},
-	"dns.rusty-leipzig.com.": {},
-}
 
 func (app *App) IndexHandler(w http.ResponseWriter, r *http.Request) {
 	app.render(w, http.StatusOK, "index", nil)
 }
 func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
-	allRecords := app.bindClient.GetRecords()
+	records := app.dnsClient.GetRecords()
 
-	var filteredRecords []dnsclient.Record
-	for _, record := range allRecords {
-		if _, excluded := excludedFQDNs[record.FQDN]; !excluded {
-			filteredRecords = append(filteredRecords, record)
-		}
-	}
-	app.render(w, http.StatusOK, "dashboard", filteredRecords)
+	app.render(w, http.StatusOK, "dashboard", records)
 }
 
 func (app *App) configHandler(w http.ResponseWriter, r *http.Request) {
@@ -39,12 +25,12 @@ func (app *App) configHandler(w http.ResponseWriter, r *http.Request) {
 		app.clientError(w, http.StatusBadRequest, "Invalid or empty record id/hash was submitted")
 		return
 	}
-	record := app.bindClient.GetRecordByHash(hash)
+	record := app.dnsClient.GetRecordByHash(hash)
 	if record == nil {
 		app.clientError(w, http.StatusBadRequest, "No matching record found")
 		return
 	}
-	aaaaRecord := app.bindClient.GetRecordForFQDN(record.FQDN, "AAAA")
+	aaaaRecord := app.dnsClient.GetRecordForFQDN(record.FQDN, "AAAA")
 	c := NewNginxConfig(*record, aaaaRecord, "http://localhost:8080")
 	app.render(w, http.StatusOK, "nginx-config", c)
 }
@@ -60,7 +46,7 @@ func (app *App) configAdjusterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	record := app.bindClient.GetRecordByHash(hash)
+	record := app.dnsClient.GetRecordByHash(hash)
 	if record == nil {
 		app.clientError(w, http.StatusBadRequest, "No matching record found")
 		return
@@ -93,27 +79,21 @@ func (app *App) AddRecordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	record := dnsclient.NewRecord(recordType, fmt.Sprintf("%s.%s.", hostname, "rusty-leipzig.com"), ip, ttlNum)
-
-	if _, excluded := excludedFQDNs[record.FQDN]; excluded {
-		app.clientError(w, http.StatusForbidden, "Addition of this record is not allowed")
-		return
-	}
-
-	if app.bindClient.GetRecordByHash(record.Hash) != nil {
+	record := dnsservice.NewRecord(recordType, fmt.Sprintf("%s.%s.", hostname, "rusty-leipzig.com"), ip, ttlNum)
+	if app.dnsClient.GetRecordByHash(record.Hash) != nil {
 		app.clientError(w, http.StatusBadRequest, "Duplication Error", "Record Already Exists")
 		return
 	}
 
 	// update existing record
-	if dr := app.bindClient.GetRecordByFQDNAndType(record.FQDN, record.Type); dr != nil {
-		if app.bindClient.RemoveRecord(*dr) != nil {
+	if dr := app.dnsClient.GetRecordByFQDNAndType(record.FQDN, record.Type); dr != nil {
+		if app.dnsClient.RemoveRecord(*dr) != nil {
 			app.serverError(w, err)
 			return
 		}
 
 		slog.Info("Successfully deleted DNS record.", "record", record)
-		err = app.bindClient.AddRecord(record)
+		err = app.dnsClient.AddRecord(record)
 		if err != nil {
 			app.serverError(w, err)
 			return
@@ -133,7 +113,7 @@ func (app *App) AddRecordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = app.bindClient.AddRecord(record)
+	err = app.dnsClient.AddRecord(record)
 	if err != nil {
 		app.serverError(w, err)
 	}
@@ -163,17 +143,13 @@ func (app *App) DeleteRecordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	record := dnsclient.Record{
+	record := dnsservice.Record{
 		Type: recordType,
 		FQDN: fqdn,
 		IP:   ip,
 	}
 
-	if _, excluded := excludedFQDNs[record.FQDN]; excluded {
-		app.clientError(w, http.StatusForbidden, "Deletion of this record is not allowed")
-		return
-	}
-	err := app.bindClient.RemoveRecord(record)
+	err := app.dnsClient.RemoveRecord(record)
 	if err != nil {
 		slog.Error("Failed to delete record")
 		app.serverError(w, err)

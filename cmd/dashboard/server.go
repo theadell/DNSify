@@ -30,5 +30,5 @@ func (app *App) GracefulShutdown() {
 	}
 
 	// Close the DNS client
-	app.bindClient.Close()
+	app.dnsClient.Close()
 }

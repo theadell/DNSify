@@ -1,24 +1,25 @@
-package dnsclient
+package dnsservice
 
 import (
 	"fmt"
 	"slices"
 	"sync"
+	"time"
 )
 
-type MockDNSClient struct {
+type MockClient struct {
 	cache []Record
 	mutex sync.RWMutex
 }
 
-func NewMockDNSClient() *MockDNSClient {
-	return &MockDNSClient{
+func NewMockClient() *MockClient {
+	return &MockClient{
 		cache: make([]Record, 0),
 		mutex: sync.RWMutex{},
 	}
 }
-func NewMockDNSClientWithTestRecords() *MockDNSClient {
-	m := &MockDNSClient{
+func NewMockClientWithTestRecords() *MockClient {
+	m := &MockClient{
 		cache: make([]Record, 0),
 		mutex: sync.RWMutex{},
 	}
@@ -29,7 +30,7 @@ func NewMockDNSClientWithTestRecords() *MockDNSClient {
 	return m
 }
 
-func (m *MockDNSClient) GetRecords() []Record {
+func (m *MockClient) GetRecords() []Record {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 	recordsCopy := make([]Record, len(m.cache))
@@ -37,7 +38,7 @@ func (m *MockDNSClient) GetRecords() []Record {
 	return recordsCopy
 }
 
-func (m *MockDNSClient) GetRecordForFQDN(targetFQDN, recordType string) *Record {
+func (m *MockClient) GetRecordForFQDN(targetFQDN, recordType string) *Record {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 
@@ -50,7 +51,7 @@ func (m *MockDNSClient) GetRecordForFQDN(targetFQDN, recordType string) *Record 
 	return nil
 }
 
-func (m *MockDNSClient) GetRecordByFQDNAndType(recordFQDN, recordType string) *Record {
+func (m *MockClient) GetRecordByFQDNAndType(recordFQDN, recordType string) *Record {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 	idx := slices.IndexFunc(m.cache, func(record Record) bool {
@@ -63,7 +64,7 @@ func (m *MockDNSClient) GetRecordByFQDNAndType(recordFQDN, recordType string) *R
 	return nil
 }
 
-func (m *MockDNSClient) GetRecordByHash(targetHash string) *Record {
+func (m *MockClient) GetRecordByHash(targetHash string) *Record {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 
@@ -76,7 +77,7 @@ func (m *MockDNSClient) GetRecordByHash(targetHash string) *Record {
 	return nil
 }
 
-func (m *MockDNSClient) AddRecord(record Record) error {
+func (m *MockClient) AddRecord(record Record) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
@@ -85,7 +86,7 @@ func (m *MockDNSClient) AddRecord(record Record) error {
 	return nil
 }
 
-func (m *MockDNSClient) RemoveRecord(record Record) error {
+func (m *MockClient) RemoveRecord(record Record) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
@@ -98,9 +99,19 @@ func (m *MockDNSClient) RemoveRecord(record Record) error {
 	return fmt.Errorf("record not found")
 }
 
-func (m *MockDNSClient) Close() {
+func (m *MockClient) Close() {
 	return
 }
-func (m *MockDNSClient) HealthCheck() bool {
-	return true
+
+func (m *MockClient) HealthCheck() HealthState {
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
+
+	return HealthState{
+		ServerReachable: true,
+		LastChecked:     time.Now(),
+		LastSynced:      time.Now(),
+		SyncError:       nil,
+		CheckError:      nil,
+	}
 }

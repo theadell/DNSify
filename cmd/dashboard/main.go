@@ -11,7 +11,7 @@ import (
 	"syscall"
 
 	"github.com/alexedwards/scs/v2"
-	"github.com/theadell/dnsify/internal/dnsclient"
+	"github.com/theadell/dnsify/internal/dnsservice"
 	"github.com/theadell/dnsify/internal/mock"
 	"github.com/theadell/dnsify/ui"
 	"golang.org/x/oauth2"
@@ -22,7 +22,7 @@ type App struct {
 	sessionManager *scs.SessionManager
 	oauthClient    *oauth2.Config
 	templateCache  map[string]*template.Template
-	bindClient     dnsclient.DNSClient
+	dnsClient      dnsservice.Service
 	server         *http.Server
 }
 
@@ -50,7 +50,7 @@ func main() {
 		config:         cfg.HTTPServerConfig,
 		sessionManager: sessionManager,
 		oauthClient:    oauth2Client,
-		bindClient:     bindClient,
+		dnsClient:      bindClient,
 		templateCache:  loadTemplates(ui.TemplatesFS),
 	}
 
@@ -90,12 +90,12 @@ func setupOAuthClient(cfg *Config, useMockOAuth bool) *oauth2.Config {
 	}
 }
 
-func setupDNSClient(cfg *Config, useMockDNS bool) (dnsclient.DNSClient, error) {
+func setupDNSClient(cfg *Config, useMockDNS bool) (dnsservice.Service, error) {
 
 	if useMockDNS {
-		return dnsclient.NewMockDNSClientWithTestRecords(), nil
+		return dnsservice.NewMockClientWithTestRecords(), nil
 	}
-	return dnsclient.NewBindClient(cfg.DNSClientConfig)
+	return dnsservice.NewClient(cfg.DNSClientConfig)
 }
 
 func handleSignals(app *App) {
