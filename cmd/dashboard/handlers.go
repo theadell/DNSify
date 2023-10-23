@@ -160,7 +160,7 @@ func (app *App) DeleteRecordHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) StatusSSEHandler(w http.ResponseWriter, r *http.Request) {
-	// SSE HEADERS
+	// Server-Sent Events (SSE) headers as per RFC 8895
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
@@ -168,16 +168,17 @@ func (app *App) StatusSSEHandler(w http.ResponseWriter, r *http.Request) {
 	// event id
 	id := 0
 	rc := http.NewResponseController(w)
-	// Avoid connection timeout by setting longer deadline
-	rc.SetReadDeadline(time.Now().Add(1 * time.Hour))
-	rc.SetWriteDeadline(time.Now().Add(1 * time.Hour))
+	// Override default timeouts for this long-lived connection.
+	noDeadline := time.Time{}
+	rc.SetReadDeadline(noDeadline)
+	rc.SetWriteDeadline(noDeadline)
 
 	ts, ok := app.templateCache["infobar"]
 	if !ok {
 		slog.Error("couldn't find the `infobar` template")
 		return
 	}
-	for {
+	sendUpdate := func() {
 		b, err := ConstructSSEMessage(ts, app.dnsClient.HealthCheck(), "message", id)
 		if err != nil {
 			slog.Error("Failed to execute infobar template", "error", err)
@@ -195,7 +196,25 @@ func (app *App) StatusSSEHandler(w http.ResponseWriter, r *http.Request) {
 			slog.Error("Failed to flush data to client", "error", err)
 			return
 		}
-		id++
-		time.Sleep(5 * time.Second)
+
+		id++ // increment the message id
+	}
+
+	// Immediately send the current status when a client connects.
+	sendUpdate()
+
+	// Periodically send status updates at regular intervals.
+	ticker := time.NewTicker(1 * time.Minute)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			sendUpdate()
+		case <-r.Context().Done():
+			slog.Info("Client closed connection", "ip", r.RemoteAddr)
+			return
+		}
+
 	}
 }
