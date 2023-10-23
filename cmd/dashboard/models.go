@@ -46,7 +46,3 @@ type HTMXDeleteDuplicateRowEvent struct {
 		Hash string `json:"hash"`
 	} `json:"deleteDuplicateRow"`
 }
-
-type TemplateData struct {
-	records *[]dnsservice.Record
-}

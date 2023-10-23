@@ -1,0 +1,21 @@
+<div class="info-bar">
+    <!-- Server Status -->
+    <div class="info-bar__section">
+        <div class="info-bar__indicator {{if .ServerReachable}}info-bar__indicator--good{{else}}info-bar__indicator--bad{{end}}"></div>
+        <div class="info-bar__detail">
+            <span class="info-bar__label">DNS Server</span>
+            <span class="info-bar__status">{{if .ServerReachable}}Online{{else}}Offline{{end}}</span>
+            <span class="info-bar__timestamp">Checked at {{.LastChecked.Format "2006-01-02 15:04:05"}}</span>
+        </div>
+    </div>
+    
+    <!-- Records Status -->
+    <div class="info-bar__section">
+        <div class="info-bar__indicator {{if not .SyncError}}info-bar__indicator--good{{else}}info-bar__indicator--bad{{end}}"></div>
+        <div class="info-bar__detail">
+            <span class="info-bar__label">Zone Transfer Integrity</span>
+            <span class="info-bar__status">{{if not .SyncError}}Synced{{else}}Degraded{{end}}</span>
+            <span class="info-bar__timestamp">Last sync at {{.LastSynced.Format "2006-01-02 15:04:05"}}</span>
+        </div>
+    </div>
+</div>

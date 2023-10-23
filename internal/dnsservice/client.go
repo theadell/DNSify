@@ -79,6 +79,11 @@ func NewClient(config DNSClientConfig) (*Client, error) {
 		tsigKey:      config.TSIGKey,
 		SyncInterval: config.SyncInterval,
 		done:         make(chan bool),
+		healthState: HealthState{
+			ServerReachable: true,
+			LastChecked:     time.Now(),
+			LastSynced:      time.Now(),
+		},
 	}
 
 	client.client.TsigSecret = map[string]string{config.TSIGKey: config.TSIGSecret}

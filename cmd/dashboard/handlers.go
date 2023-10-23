@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/theadell/dnsify/internal/dnsservice"
 )
@@ -156,4 +157,45 @@ func (app *App) DeleteRecordHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	slog.Info("Successfully deleted a dns record.", "record", record)
 	w.WriteHeader(http.StatusOK)
+}
+
+func (app *App) StatusSSEHandler(w http.ResponseWriter, r *http.Request) {
+	// SSE HEADERS
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+
+	// event id
+	id := 0
+	rc := http.NewResponseController(w)
+	// Avoid connection timeout by setting longer deadline
+	rc.SetReadDeadline(time.Now().Add(1 * time.Hour))
+	rc.SetWriteDeadline(time.Now().Add(1 * time.Hour))
+
+	ts, ok := app.templateCache["infobar"]
+	if !ok {
+		slog.Error("couldn't find the `infobar` template")
+		return
+	}
+	for {
+		b, err := ConstructSSEMessage(ts, app.dnsClient.HealthCheck(), "message", id)
+		if err != nil {
+			slog.Error("Failed to execute infobar template", "error", err)
+			return
+		}
+		_, err = w.Write(b)
+		if err != nil {
+			slog.Error("Failed to write bytes to SSE connection", "error", err)
+			return
+		}
+
+		// flush data immediately to client
+		err = rc.Flush()
+		if err != nil {
+			slog.Error("Failed to flush data to client", "error", err)
+			return
+		}
+		id++
+		time.Sleep(5 * time.Second)
+	}
 }

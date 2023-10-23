@@ -22,28 +22,14 @@ Dashboard
       </td>
     </tr>
 {{ end }}
-      
+
 {{ define "content" }}
 <div class="container" >
   <h3 class="heading">rusty-leipzig.com</h3>
 
-  <div class="status-bar">
-      <!-- DNS Server Status -->
-      <div class="status-bar__item" sse-swap="dnsStatus">
-          <span class="status-bar__icon"></span>
-          <span class="status-bar__text">DNS Server: <strong></strong></span>
-      </div>
+  <div class="info-bar-sse-wrapper" hx-ext="sse" sse-connect="/status" sse-swap="message">
 
-      <!-- Active Client Count -->
-      <div class="status-bar__item" sse-swap="activeClients">
-          <span class="status-bar__icon status-bar__icon--users"></span>
-          <span class="status-bar__text">Active Clients: <strong></strong></span>
-      </div>
   </div>
-
-  <div class="status-bar" hx-get="/latest_updates" hx-trigger="every 30s">
-
-  </div> 
   <p>Create a new record</p>
   <div class="row">
     <ul class="tablist">
@@ -154,6 +140,5 @@ Dashboard
     </table>
   </div>
 </div>
-
 <script src="/static/js/index.js"></script>
 {{ end }}

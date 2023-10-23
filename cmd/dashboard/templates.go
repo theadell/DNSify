@@ -14,7 +14,7 @@ import (
 func loadTemplates(tmplFS embed.FS) map[string]*template.Template {
 	cache := make(map[string]*template.Template)
 
-	baseTemplateContent, err := tmplFS.ReadFile("templates/base.gohtmltmpl")
+	baseTemplateContent, err := tmplFS.ReadFile("templates/base.gotmpl")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -107,4 +107,20 @@ func (app *App) renderTemplateFragment(w http.ResponseWriter, status int, page s
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	buf.WriteTo(w)
+}
+
+func ConstructSSEMessage(tmpl *template.Template, data any, eventName string, counter int) ([]byte, error) {
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, data); err != nil {
+		return nil, fmt.Errorf("Failed to execute template: %v", err)
+	}
+
+	lines := strings.Split(buf.String(), "\n")
+	message := fmt.Sprintf("id: %d\nevent: %s\n", counter, eventName)
+	for _, line := range lines {
+		message += fmt.Sprintf("data: %s\n", line)
+	}
+	message += "\n"
+
+	return []byte(message), nil
 }
