@@ -7,13 +7,17 @@ dnsClient:
   syncInterval: 30
   guards:
     immutable:
-      - dnsify
-      - dns
-      - ns1
-      - ns2
-      - ns3
+      - A/dnsify # IPV4 Records for `dnsify.[zone]`
+      - A/dns # IPV4 Records for `dns.[zone]`
+      - "*/ns1" # All record types for `ns1.[zone]`
+      - "*/ns2"
+      - "*/ns3"
+      - NS/@ # NS Records for the zone
     admin_only:
-      - www
+      - A/@
+      - AAAA/@
+      - A/www
+      - AAAA/www
 
 httpServer:
   host: "localhost"

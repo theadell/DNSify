@@ -43,7 +43,7 @@ func (c *Client) GetRecords() []Record {
 	// Filter out immutable records
 	var recordsCopy []Record
 	for _, record := range c.cache {
-		if !c.isImmutable(record.FQDN) {
+		if !c.isImmutable(record.Type, record.FQDN) {
 			recordsCopy = append(recordsCopy, record)
 		}
 	}
@@ -92,7 +92,7 @@ func (c *Client) GetRecordForFQDN(targetFQDN, recordType string) *Record {
 func (c *Client) AddRecord(record Record) error {
 	slog.Debug("Attempting to add record", "record", record)
 
-	if c.isImmutable(record.FQDN) {
+	if c.isImmutable(record.Type, record.FQDN) {
 		slog.Warn("Attempted to modify an immutable record", "record", record.FQDN)
 		return ErrImmutableRecord
 	}

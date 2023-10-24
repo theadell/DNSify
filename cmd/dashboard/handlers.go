@@ -96,6 +96,13 @@ func (app *App) AddRecordHandler(w http.ResponseWriter, r *http.Request) {
 		slog.Info("Successfully deleted DNS record.", "record", record)
 		err = app.dnsClient.AddRecord(record)
 		if err != nil {
+			if err == dnsservice.ErrImmutableRecord {
+				app.clientError(w, http.StatusBadRequest, "This record is read only")
+				return
+			} else if err == dnsservice.ErrNotAuthorized {
+				app.clientError(w, http.StatusUnauthorized, "You do not have the required permissions to perform this action.")
+				return
+			}
 			app.serverError(w, err)
 			return
 		}
@@ -152,8 +159,17 @@ func (app *App) DeleteRecordHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := app.dnsClient.RemoveRecord(record)
 	if err != nil {
+		if err == dnsservice.ErrImmutableRecord {
+			app.clientError(w, http.StatusBadRequest, "This record is read only")
+			return
+		} else if err == dnsservice.ErrNotAuthorized {
+			app.clientError(w, http.StatusUnauthorized, "You do not have the required permissions to perform this action.")
+			return
+		}
+
 		slog.Error("Failed to delete record")
 		app.serverError(w, err)
+		return
 	}
 	slog.Info("Successfully deleted a dns record.", "record", record)
 	w.WriteHeader(http.StatusOK)

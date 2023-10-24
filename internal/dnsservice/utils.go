@@ -55,31 +55,46 @@ func (c *Client) isServerReachable() bool {
 	return err == nil && len(r.Answer) > 0
 }
 
-func (c *Client) toFQDN(subdomain string) string {
-	return fmt.Sprintf("%s.%s", subdomain, c.zone)
+func (c *Client) isImmutable(t, fqdn string) bool {
+	tguard := NewRecordGuard(t, fqdn)
+	if _, ok := c.guards.Immutable[tguard]; ok {
+		return ok
+	}
+	wildcardGuard := NewRecordGuard("*", fqdn)
+	if _, ok := c.guards.Immutable[wildcardGuard]; ok {
+		return true
+	}
+	return false
 }
 
-func (c *Client) extractSubdomain(fqdn string) string {
-	subdomain := strings.TrimSuffix(fqdn, "."+c.zone)
+func (c *Client) isAdminEditable(t, fqdn string) bool {
+	tguard := NewRecordGuard(t, fqdn)
+	if _, ok := c.guards.AdminOnly[tguard]; ok {
+		return ok
+	}
+	wildcardGuard := NewRecordGuard("*", fqdn)
+	if _, ok := c.guards.AdminOnly[wildcardGuard]; ok {
+		return true
+	}
+	return false
+}
+
+func splitGuard(guard string) (recordType, subdomain string) {
+	parts := strings.SplitN(guard, "/", 2)
+	if len(parts) != 2 {
+		return "", ""
+	}
+	return parts[0], parts[1]
+}
+
+func toFQDN(subdomain, zone string) string {
+	if subdomain == "@" {
+		return zone
+	}
+	return fmt.Sprintf("%s.%s", subdomain, zone)
+}
+
+func extractSubdomain(fqdn, zone string) string {
+	subdomain := strings.TrimSuffix(fqdn, "."+zone)
 	return strings.TrimSuffix(subdomain, ".")
-}
-
-func (c *Client) isImmutable(fqdn string) bool {
-	subdomain := c.extractSubdomain(fqdn)
-	for _, r := range c.guards.Immutable {
-		if r == subdomain {
-			return true
-		}
-	}
-	return false
-}
-
-func (c *Client) isAdminEditable(fqdn string) bool {
-	subdomain := c.extractSubdomain(fqdn)
-	for _, r := range c.guards.AdminEditable {
-		if r == subdomain {
-			return true
-		}
-	}
-	return false
 }

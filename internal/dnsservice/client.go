@@ -25,11 +25,6 @@ type Service interface {
 	Close()
 }
 
-type RecordGuards struct {
-	Immutable     []string `mapstructure:"immutable"`
-	AdminEditable []string `mapstructure:"admin_only"`
-}
-
 type DNSClientConfig struct {
 	TSIGKey      string       `mapstructure:"tsigKey"`
 	TSIGSecret   string       `mapstructure:"tsigSecret"`
@@ -42,7 +37,7 @@ type DNSClientConfig struct {
 
 type Client struct {
 	cache        []Record
-	guards       RecordGuards
+	guards       GuardMap
 	mutex        sync.RWMutex
 	client       *dns.Client
 	zone         string
@@ -69,8 +64,8 @@ func NewClient(config DNSClientConfig) (*Client, error) {
 	}
 	client := &Client{
 		cache:        make([]Record, 0),
-		guards:       config.Guards,
 		mutex:        sync.RWMutex{},
+		guards:       parseGuards(config.Guards, config.Zone),
 		client:       new(dns.Client),
 		zone:         config.Zone,
 		host:         net.IP(config.Host),
@@ -85,7 +80,6 @@ func NewClient(config DNSClientConfig) (*Client, error) {
 			LastSynced:      time.Now(),
 		},
 	}
-
 	client.client.TsigSecret = map[string]string{config.TSIGKey: config.TSIGSecret}
 	if err := client.fetchAndCacheRecords(); err != nil {
 		return nil, err

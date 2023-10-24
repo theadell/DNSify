@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"log/slog"
 	"strings"
 
 	"github.com/spf13/viper"
@@ -39,7 +39,7 @@ func loadConfig() (*Config, error) {
 	v.SetEnvPrefix("DNSAPP")
 	if err := v.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			fmt.Println("No config file found")
+			slog.Error("Config file not found", "Error", err)
 		} else {
 			return nil, err
 		}
