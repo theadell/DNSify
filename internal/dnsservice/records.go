@@ -1,10 +1,13 @@
 package dnsservice
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"log/slog"
 	"slices"
+	"strconv"
 	"time"
 
 	"github.com/miekg/dns"
@@ -160,4 +163,32 @@ func (c *Client) RemoveRecord(record Record) error {
 	}
 
 	return nil
+}
+func hashRecord(record Record) string {
+	data := record.Type + record.FQDN + record.IP + strconv.FormatUint(uint64(record.TTL), 10)
+	hash := sha256.Sum256([]byte(data))
+	return hex.EncodeToString(hash[:])
+}
+func (c *Client) isImmutable(t, fqdn string) bool {
+	tguard := NewRecordGuard(t, fqdn)
+	if _, ok := c.guards.Immutable[tguard]; ok {
+		return ok
+	}
+	wildcardGuard := NewRecordGuard("*", fqdn)
+	if _, ok := c.guards.Immutable[wildcardGuard]; ok {
+		return true
+	}
+	return false
+}
+
+func (c *Client) isAdminEditable(t, fqdn string) bool {
+	tguard := NewRecordGuard(t, fqdn)
+	if _, ok := c.guards.AdminOnly[tguard]; ok {
+		return ok
+	}
+	wildcardGuard := NewRecordGuard("*", fqdn)
+	if _, ok := c.guards.AdminOnly[wildcardGuard]; ok {
+		return true
+	}
+	return false
 }

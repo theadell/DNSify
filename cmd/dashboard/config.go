@@ -3,21 +3,23 @@ package main
 import (
 	"log/slog"
 	"strings"
+	"time"
 
 	"github.com/spf13/viper"
 	"github.com/theadell/dnsify/internal/dnsservice"
 )
 
 type Config struct {
-	DNSClientConfig    dnsservice.DNSClientConfig `mapstructure:"dnsClient"`
-	HTTPServerConfig   HTTPServerConfig           `mapstructure:"httpServer"`
-	OAuth2ClientConfig OAuth2ClientConfig         `mapstructure:"oauth2Client"`
+	DNSClientConfig    dnsservice.DNSConfig `mapstructure:"dns"`
+	HTTPServerConfig   HTTPServerConfig     `mapstructure:"httpServer"`
+	OAuth2ClientConfig OAuth2ClientConfig   `mapstructure:"oauth2Client"`
 }
 
 type HTTPServerConfig struct {
 	Host         string `mapstructure:"host"`
 	Port         uint   `mapstructure:"port"`
 	SecureCookie bool   `mapstructure:"secureCookie"`
+	pushInterval time.Duration
 }
 
 type OAuth2ClientConfig struct {
@@ -36,7 +38,7 @@ func loadConfig() (*Config, error) {
 	v.SetConfigType("yaml")
 	v.AutomaticEnv()
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-	v.SetEnvPrefix("DNSAPP")
+	v.SetEnvPrefix("DNSIFY")
 	if err := v.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			slog.Error("Config file not found", "Error", err)

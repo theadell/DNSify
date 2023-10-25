@@ -1,23 +1,25 @@
-dnsClient:
-  tsigKey: "tsig-key."
-  tsigSecret: "tsig-secret"
-  host: "157.230.106.145"
-  port: 53
-  zone: "rusty-leipzig.com."
-  syncInterval: 30
-  guards:
-    immutable:
-      - A/dnsify # IPV4 Records for `dnsify.[zone]`
-      - A/dns # IPV4 Records for `dns.[zone]`
-      - "*/ns1" # All record types for `ns1.[zone]`
-      - "*/ns2"
-      - "*/ns3"
-      - NS/@ # NS Records for the zone
-    admin_only:
-      - A/@
-      - AAAA/@
-      - A/www
-      - AAAA/www
+dns:
+  server:
+    addr: "ns1.rusty-leipzig.com:53"
+    zone: "rusty-leipzig.com."
+    tsigKey: "tsig-key."
+    tsigSecret: "tsig-secret"
+  client:
+    syncInterval: 1800
+    healthCheckInterval: 60
+    guards:
+      immutable:
+        - A/dnsify # IPV4 Records for `dnsify.[zone]`
+        - A/dns # IPV4 Records for `dns.[zone]`
+        - "*/ns1" # All record types for `ns1.[zone]`
+        - "*/ns2"
+        - "*/ns3"
+        - NS/@ # NS Records for the zone
+      admin_only:
+        - A/@
+        - AAAA/@
+        - A/www
+        - AAAA/www
 
 httpServer:
   host: "localhost"

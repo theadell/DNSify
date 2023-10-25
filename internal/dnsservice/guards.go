@@ -80,3 +80,11 @@ func parseGuardString(guardStr, zone string) (RecordGuard, bool) {
 func isValidGuard(guardStr string) bool {
 	return guardRegex.MatchString(guardStr)
 }
+
+func splitGuard(guard string) (recordType, subdomain string) {
+	parts := strings.SplitN(guard, "/", 2)
+	if len(parts) != 2 {
+		return "", ""
+	}
+	return parts[0], parts[1]
+}

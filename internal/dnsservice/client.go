@@ -2,9 +2,7 @@ package dnsservice
 
 import (
 	"errors"
-	"fmt"
 	"log/slog"
-	"net"
 	"sync"
 	"time"
 
@@ -25,30 +23,19 @@ type Service interface {
 	Close()
 }
 
-type DNSClientConfig struct {
-	TSIGKey      string       `mapstructure:"tsigKey"`
-	TSIGSecret   string       `mapstructure:"tsigSecret"`
-	Host         string       `mapstructure:"host"`
-	Port         uint16       `mapstructure:"port"`
-	Zone         string       `mapstructure:"zone"`
-	SyncInterval int          `mapstructure:"SyncInterval"`
-	Guards       RecordGuards `mapstructure:"guards"`
-}
-
 type Client struct {
-	cache        []Record
-	guards       GuardMap
-	mutex        sync.RWMutex
-	client       *dns.Client
-	zone         string
-	host         net.IP
-	port         uint16
-	serverAddr   string
-	tsigKey      string
-	SyncInterval int
-	done         chan bool
-	healthState  HealthState
-	wg           sync.WaitGroup
+	cache               []Record
+	guards              GuardMap
+	mutex               sync.RWMutex
+	client              *dns.Client
+	zone                string
+	serverAddr          string
+	tsigKey             string
+	SyncInterval        int
+	HealthCheckInterval int
+	done                chan bool
+	healthState         HealthState
+	wg                  sync.WaitGroup
 }
 type HealthState struct {
 	ServerReachable bool
@@ -58,36 +45,33 @@ type HealthState struct {
 	CheckError      error
 }
 
-func NewClient(config DNSClientConfig) (*Client, error) {
+func NewClient(config DNSConfig) (*Client, error) {
 	if err := validateConfig(&config); err != nil {
 		return nil, err
 	}
 	client := &Client{
-		cache:        make([]Record, 0),
-		mutex:        sync.RWMutex{},
-		guards:       parseGuards(config.Guards, config.Zone),
-		client:       new(dns.Client),
-		zone:         config.Zone,
-		host:         net.IP(config.Host),
-		port:         config.Port,
-		serverAddr:   fmt.Sprintf("%s:%d", config.Host, config.Port),
-		tsigKey:      config.TSIGKey,
-		SyncInterval: config.SyncInterval,
-		done:         make(chan bool),
+		cache:      make([]Record, 0),
+		mutex:      sync.RWMutex{},
+		guards:     parseGuards(config.Guards, config.Zone),
+		client:     new(dns.Client),
+		zone:       config.Zone,
+		serverAddr: config.Addr,
+		tsigKey:    config.TsigKey,
+		done:       make(chan bool),
 		healthState: HealthState{
 			ServerReachable: true,
 			LastChecked:     time.Now(),
 			LastSynced:      time.Now(),
 		},
 	}
-	client.client.TsigSecret = map[string]string{config.TSIGKey: config.TSIGSecret}
+	client.client.TsigSecret = map[string]string{config.TsigKey: config.TsigSecret}
 	if err := client.fetchAndCacheRecords(); err != nil {
 		return nil, err
 	}
 
 	client.wg.Add(2)
-	go client.periodicHealthCheck(1 * time.Minute)
-	go client.periodicSyncRecords(time.Duration(client.SyncInterval) * time.Minute)
+	go client.periodicHealthCheck(time.Duration(config.HealthCheckInterval) * time.Second)
+	go client.periodicSyncRecords(time.Duration(config.SyncInterval) * time.Second)
 	return client, nil
 }
 
@@ -237,4 +221,11 @@ func (c *Client) periodicHealthCheck(interval time.Duration) {
 			return
 		}
 	}
+}
+
+func (c *Client) isServerReachable() bool {
+	m := new(dns.Msg)
+	m.SetQuestion(c.zone, dns.TypeSOA)
+	r, _, err := c.client.Exchange(m, c.serverAddr)
+	return err == nil && len(r.Answer) > 0
 }

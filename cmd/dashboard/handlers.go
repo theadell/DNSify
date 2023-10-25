@@ -220,7 +220,7 @@ func (app *App) StatusSSEHandler(w http.ResponseWriter, r *http.Request) {
 	sendUpdate()
 
 	// Periodically send status updates at regular intervals.
-	ticker := time.NewTicker(1 * time.Minute)
+	ticker := time.NewTicker(time.Minute)
 	defer ticker.Stop()
 
 	for {
