@@ -117,7 +117,7 @@ func (app *App) AddRecordHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		// instruct htmx to remove the old record
 		w.Header().Set("HX-Trigger", string(jsonHeader))
-		app.renderTemplateFragment(w, http.StatusOK, "dashboard", "records", record)
+		app.renderTemplateFragment(w, http.StatusOK, "dashboard", "record-row", record)
 		return
 	}
 
@@ -127,7 +127,7 @@ func (app *App) AddRecordHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	slog.Info("Successfully added a new DNS record.", "record", record)
-	app.renderTemplateFragment(w, http.StatusOK, "dashboard", "records", &record)
+	app.renderTemplateFragment(w, http.StatusOK, "dashboard", "record-row", &record)
 }
 
 func (app *App) notFoundHandler(w http.ResponseWriter, r *http.Request) {

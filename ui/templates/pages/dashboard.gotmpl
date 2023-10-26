@@ -2,143 +2,246 @@
 Dashboard 
 {{ end }} 
 
-{{ define "records" }}
-    <tr id="{{.Hash}}">
-      <td>{{.Type}}</td>
-      <td>{{.FQDN}}</td>
-      <td>directs to {{.IP}}</td>
-      <td>{{.TTL}}</td>
-      <td>
-        <form action="/dashboard/config/nginx" method="POST">
-          <input type="hidden" name="hash" value="{{.Hash}}">
-          <button class="btn btn-generate" type="submit" class="btn-generate">Config</button>
-        </form>
-      </td>
-      <td>
-        <button class="btn btn-delete" hx-delete="/records?Type={{.Type}}&FQDN={{.FQDN}}&IP={{.IP}}&TTL={{.TTL}}"
-          hx-confirm="Are you sure you want to delete this record?" hx-target="closest tr" hx-swap="outerHTML swap:1s">
-          Delete
-        </button>
-      </td>
-    </tr>
+{{ define "record-row" }}
+  <tr class="dns-records__row" id="{{.Hash}}">
+    <td>{{.Type}}</td>
+    <td>{{.FQDN}}</td>
+    <td>directs to {{.IP}}</td>
+    <td>{{.TTL}}</td>
+    <td class="dns-records__action-cell">
+    <form class="dns-records__config-form" action="/dashboard/config/nginx" method="POST">
+        <input type="hidden" name="hash" value="{{.Hash}}">
+        <button class="btn btn--success" type="submit">Config</button>
+      </form>
+      <button class="btn btn--danger" 
+              hx-delete="/records?Type={{.Type}}&FQDN={{.FQDN}}&IP={{.IP}}&TTL={{.TTL}}"
+              hx-confirm="Are you sure you want to delete this record?" 
+              hx-target="closest tr" 
+              hx-swap="outerHTML swap:1s">
+        Delete
+      </button>
+    </td>
+  </tr>
 {{ end }}
 
 {{ define "content" }}
 <div class="container" >
   <h3 class="heading">rusty-leipzig.com</h3>
 
+  <!-- Server Status Info Bar  -->
   <div class="info-bar-sse-wrapper" hx-ext="sse" sse-connect="/status" sse-swap="message">
 
   </div>
-  <p>Create a new record</p>
-  <div class="row">
-    <ul class="tablist">
-      <li class="is-active">
-        <a>A</a>
-      </li>
-      <li>
-        <a>AAAA</a>
-      </li>
-      <li>
-        <a>CNAME</a>
-      </li>
-      <li>
-        <a>MX</a>
-      </li>
-      <li>
-        <a>TXT</a>
-      </li>
-      <li>
-        <a>NS</a>
-      </li>
-      <li>
-        <a>SRV</a>
-      </li>
-      <li>
-        <a>CAA</a>
-      </li>
-    </ul>
-  </div>
-  <div class="sep"></div>
 
-  <div class="form-container">
-    <form
-      id="record-form"
-      class="record-form"
-      hx-post="/records"
-      hx-swap="afterbegin settle=1s"
-      hx-target="#records-table tbody"
-      hx-indicator="#spinner"
-    >
-      <div class="input-group input-group-hostname">
-        <label for="hostname">Hostname</label>
-        <input
-          type="text"
-          id="hostname"
-          name="hostname"
-          placeholder="Enter hostname"
-          required
-        />
-        <span class="error-message">Invalid subdomain</span>
-        <span class="fqdn-label" id="fqdn"></span>
+  <!-- Dns Record Entry Form -->
+  <div class="dns-entry" x-data="dnsForm">
+        <p class="dns-entry__title">Create a new record</p>
+        <div class="dns-entry__type-selector">
+          <ul class="dns-entry__types">
+            <template x-for="type in dnsTypes" :key="type">
+              <li
+                :class="{ 'dns-entry__type--active': activeType === type }"
+                class="dns-entry__type"
+                @click="activeType = type"
+              >
+                <span x-text="type"></span>
+              </li>
+            </template>
+          </ul>
+        </div>
+        <div class="dns-entry__separator"></div>
+
+        <div class="dns-entry__form-container">
+          <form
+            id="dns-entry-form"
+            class="dns-entry__form"
+            hx-post="/records"
+            hx-swap="afterbegin settle=1s"
+            hx-target="#dns_records_table tbody"
+            hx-indicator="#spinner"
+          >
+            <div
+              class="dns-entry__input-group dns-entry__input-group--hostname"
+            >
+              <label for="hostname">Hostname</label>
+              <input
+                type="text"
+                id="hostname"
+                name="hostname"
+                placeholder="Enter hostname"
+                required
+                @input="hostnameDirty=true"
+                @blur="hostnameDirty=true"
+                @change="hostnameDirty=true"
+                x-model="hostname"
+                :class="{ 'error': !validateHostname() }"
+              />
+              <span
+                class="dns-entry__error-message"
+                x-show="!validateHostname()"
+                >Invalid subdomain</span
+              >
+              <span
+                class="dns-entry__fqdn-label"
+                x-text="hostname ? `${hostname}.rusty-leipzig.com.` : ''"
+              ></span>
+            </div>
+
+            <div class="dns-entry__input-group">
+              <label for="ip">Will Direct To</label>
+              <input
+                type="text"
+                id="ip"
+                name="ip"
+                placeholder="Enter '@' or a custom IP Address"
+                required
+                x-model="ip"
+                @input="ipDirty=true"
+                @blur="ipDirty=true"
+                @change="ipDirty=true"
+                :class="{ 'error': !validateIp() }"
+              />
+              <span class="dns-entry__error-message" x-show="!validateIp()"
+                >Invalid IP</span
+              >
+            </div>
+
+            <div class="dns-entry__input-group">
+              <label for="ttl">TTL (seconds)</label>
+              <input
+                type="number"
+                id="ttl"
+                name="ttl"
+                x-model="ttl"
+                placeholder="Enter TTL"
+                required
+                :class="{ 'error': !validateTtl() }"
+              />
+              <input
+                type="hidden"
+                id="recordType"
+                name="type"
+                x-model="activeType"
+              />
+              <span class="dns-entry__error-message" x-show="!validateTtl()"
+                >Invalid Time-To-Live</span
+              >
+            </div>
+
+            <div class="dns-entry__input-group">
+              <label style="visibility: hidden">Submit button</label>
+              <button
+                id="dns-entry-submit-btn"
+                class="btn dns-entry__submit-btn"
+                type="submit"
+                :disabled="!isValidForm()"
+              >
+                Create Record
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
 
-      <div class="input-group">
-        <label for="ip">Will Direct To</label>
-        <input
-          type="text"
-          id="ip"
-          name="ip"
-          placeholder="Enter '@' or a custom IP Address"
-          required
-        />
-        <span class="error-message">Invalid IPV4</span>
-      </div>
-
-      <div class="input-group">
-        <label for="ttl">TTL (seconds)</label>
-        <input
-          type="number"
-          id="ttl"
-          name="ttl"
-          value="3600"
-          placeholder="Enter TTL"
-          required
-        />
-        <input type="hidden" id="recordType" name="type" value="" />
-        <span class="error-message">Invalid Time-To-Live</span>
-      </div>
-
-      <button id="record-submit-btn" class="btn" type="submit" >
-        Create Record
-      </button>
-    </form>
-  </div>
+  <!-- Spinner for loading  -->
 <div id="spinner" class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
  <div id="server-error" class="server-error" style="display:none;">
     <div id="error-message" ></div>
 </div>
- 
-  <span class="table-heading">DNS Records</span>
-  <div class="table-container">
-    <table id="records-table">
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Hostname</th>
-          <th>Value</th>
-          <th>TTL (seconds)</th>
-          <th></th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-       {{range .}}
-          {{ template "records" . }}
-        {{end}}
-      </tbody>
-    </table>
-  </div>
-</div>
+
+<span class="dns-records__heading">DNS Records</span>
+<div class="dns-records">
+  <table id="dns_records_table" class="dns-records__table">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Hostname</th>
+        <th>Value</th>
+        <th>TTL (seconds)</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {{range .}}
+        {{ template "record-row" . }}
+      {{end}}
+    </tbody>
+  </table>
+</div></div>
+<script>
+      const dnsForm = {
+        activeType: "A",
+        dnsTypes: ["A", "AAAA", "CNAME", "NS", "MX"],
+        hostname: "",
+        ip: "",
+        ttl: "3600",
+        hostnameDirty: false,
+        ipDirty: false,
+        hostnameRegex: /^(?!-)[a-zA-Z0-9-]{1,63}(?<!-)$/,
+        ipv4Regex: /^(?!0)(?!.*\.$)((1?\d?\d|25[0-5]|2[0-4]\d)(\.|$)){4}$/,
+        ipv6Regex: /^([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}$/,
+
+        validateHostname() {
+          if (!this.hostnameDirty) {
+            return true;
+          }
+          if (!this.hostnameRegex.test(this.hostname.trim())) {
+            return false;
+          }
+          return true;
+        },
+
+        validateIp() {
+          if (!this.ipDirty) {
+            return true;
+          }
+          const value = this.ip.trim();
+
+          if (value === "@" && this.activeType !== "A") {
+            return false;
+          }
+
+          if (value === "@" && this.activeType === "A") {
+            return true;
+          }
+
+          const currentRegex =
+            this.activeType === "AAAA" ? this.ipv6Regex : this.ipv4Regex;
+
+          if (!currentRegex.test(value)) {
+            return false;
+          }
+          return true;
+        },
+
+        validateTtl() {
+          const value = parseInt(this.ttl.trim(), 10);
+          if (isNaN(value) || value < 60) {
+            return false;
+          }
+          return true;
+        },
+
+        isValidForm() {
+          return (
+            this.validateHostname() &&
+            this.validateIp() &&
+            this.validateTtl() &&
+            this.hostnameDirty &&
+            this.ipDirty
+          );
+        },
+        isFormFilled: function () {
+          return this.hostname && this.ip && this.ttl;
+        },
+        setHostnameDirty: function () {
+          this.hostnameDirty = true;
+        },
+
+        setIpDirty: function () {
+          this.ipDirty = true;
+        },
+      };
+    </script>
 <script src="/static/js/index.js"></script>
 {{ end }}
