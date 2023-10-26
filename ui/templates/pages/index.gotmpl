@@ -2,30 +2,37 @@
 Login 
 {{ end }}
 
+{{ define "additionalStyles" }}
+<link rel="stylesheet" href="/static/css/login.css">
+{{ end }}
+
 {{ define "content" }}
 
-<div class="wrapper">
-    <div class="brand-section">
-        <div class="brand-content">
-          <img class="logo" src="https://assets.cdn.personio.de/logos/4828/default/56be0439ec04f9bb1a8d757e9c7d1cd1.png" alt="itemis AG logo">
-            <h2>LEIPZIG</h1>
-        </div>
+<div class="login-page">
+    <div class="login-page__brand">
+        <img class="login-page__logo" src="/static/img/logo.png" alt="DNSify logo">
+        <h2>Effortless DNS Management</h2>
+        <p>Who needs SSH adventures and zone file dramas? Not us!</p>
     </div>
-    <div class="login-section">
-    <div class="login-card">
-
-    <h3>Welcome to Rusty-Leipzig</h3>
-    <p>Access the DNS Management Dashboard using your company account.</p>
-    <div class="sso-section">
-        <a href="/login" class="sso-link">
-            <div class="sso-content">
-                <img src="/static/img/key.png" alt="Keycloak login">
-                <span>Login with your itemis leipzig credentials</span>
+    <div class="login-page__content">
+        <div class="login-card">
+            <h3>Welcome to DNSify Management</h3>
+            <p>Log in to access the DNS Management Dashboard.</p>
+            <div class="login-card__option">
+                <a href="/login" class="login-card__link">
+                    <img class="login-card__icon" src="/static/img/login.png" alt="Company login">
+                    <span>Login with your DNSify account</span>
+                </a>
             </div>
-        </a>
-    </div>
-    <a class="login-help" href="mailto:ahabib@itemis.com?subject=Login%20Issue%20%7C%20DNS%20Management%20Dashboard">Having trouble logging in? Contact us.</a>
-</div>
+            <div class="login-card__option">
+                <a href="/google-login" class="login-card__link">
+                    <img src="/static/img/google-logo-light.svg" alt="Google Logo" class="login-google__logo login-google__logo--light">
+                    <img src="/static/img/google-logo-dark.svg" alt="Google Logo" class="login-google__logo login-google__logo--dark">
+                    <span>Login with Google Workspace</span>
+                </a>
+            </div>
+            <a class="login-card__help" href="mailto:ahabib@itemis.com?subject=Login%20Issue%20%7C%20DNS%20Management%20Dashboard">Need assistance? Contact us.</a>
+        </div>
     </div>
 </div>
 {{ end }}

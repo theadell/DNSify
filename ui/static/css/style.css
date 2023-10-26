@@ -33,7 +33,22 @@ html:focus-within {
 a:not([class]) {
   text-decoration-skip-ink: auto;
 }
+.fade-in {
+  opacity: 1;
+  animation-name: fadeInOpacity;
+  animation-iteration-count: 1;
+  animation-timing-function: ease-in;
+  animation-duration: 1s;
+}
 
+@keyframes fadeInOpacity {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
 /* Make images easier to work with */
 img,
 picture {
@@ -269,7 +284,9 @@ p {
   cursor: not-allowed;
   opacity: 0.6;
 }
-
+.btn:disabled:hover {
+  background-color: inherit;
+}
 .btn:focus {
   outline: 2px solid var(--outline-color);
 }
@@ -618,118 +635,6 @@ input.error {
   opacity: 1;
 }
 
-.wrapper {
-  display: flex;
-  width: 100vw;
-  height: 100vh;
-}
-
-.brand-section {
-  width: 33.33%;
-  background-color: rgb(213, 240, 247);
-  color: white;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.brand-content {
-  text-align: center;
-}
-.brand-content .logo {
-  max-width: 200px;
-  width: 100%;
-  height: auto;
-  margin-bottom: 0;
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
-}
-.brand-content h2 {
-  letter-spacing: 5px;
-  margin-bottom: 2rem;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.login-section {
-  width: 66.67%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: white;
-}
-
-.login-card h3 {
-  margin-bottom: 10px;
-}
-
-.sso-section {
-  margin-top: 20px;
-}
-
-.sso-link {
-  display: flex;
-  align-items: center;
-  padding: 5px 15px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  text-decoration: none;
-  background-color: #ffffff;
-  transition: background-color 0.3s ease;
-  color: #555;
-  margin-top: 20px;
-}
-
-.sso-link:hover {
-  background-color: #f5f5f5;
-}
-
-.sso-content {
-  display: flex;
-  align-items: center;
-}
-
-.sso-link img {
-  width: 24px;
-  height: 24px;
-  margin-right: 10px;
-}
-
-.login-help {
-  display: block;
-  margin-top: 15px;
-  text-decoration: underline;
-  color: #3498db;
-}
-
-.login-help:hover {
-  color: #2980b9;
-}
-
-@media screen and (max-width: 920px) {
-  .wrapper {
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-  }
-
-  .brand-section {
-    display: none; /* Hides the brand section */
-  }
-
-  .login-section {
-    width: 100%; /* Takes up full width */
-  }
-  .login-card {
-    padding: 2rem;
-  }
-}
-
-tr.htmx-swapping td {
-  opacity: 0;
-  transition: opacity 1s ease-out;
-}
-
 /* spinner  */
 
 .lds-ripple {
@@ -843,16 +748,98 @@ tr.htmx-swapping td {
   display: inline-block;
 }
 
-/* fade out animation */
-.fade-out {
-  animation: fadeOut 1s forwards;
+/* Transitions  */
+
+.fade {
+  opacity: 0;
+  animation: fadeAnim 1s ease-in forwards;
 }
 
-@keyframes fadeOut {
-  from {
+@keyframes fadeAnim {
+  0% {
+    opacity: 0;
+  }
+  100% {
     opacity: 1;
   }
-  to {
+}
+
+.fade-out {
+  animation: fadeOutAnim 1s ease-out forwards;
+}
+
+@keyframes fadeOutAnim {
+  0% {
+    opacity: 1;
+  }
+  100% {
     opacity: 0;
+  }
+}
+.slide-right {
+  opacity: 0;
+  transform: translateX(100%);
+  animation: slideRightAnim 1s ease-out forwards;
+}
+
+@keyframes slideRightAnim {
+  0% {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.zoom {
+  opacity: 0;
+  transform: scale(0.9);
+  animation: zoomAnim 1s ease-in-out forwards;
+}
+
+@keyframes zoomAnim {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.slide-top {
+  opacity: 0;
+  transform: translateY(-100%);
+  animation: slideTopAnim 1s ease-out forwards;
+}
+
+@keyframes slideTopAnim {
+  0% {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.rotate {
+  opacity: 0;
+  transform: rotate(-90deg);
+  animation: rotateAnim 1s ease-in-out forwards;
+}
+
+@keyframes rotateAnim {
+  0% {
+    opacity: 0;
+    transform: rotate(-90deg);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(0deg);
   }
 }

@@ -3,7 +3,7 @@ Dashboard
 {{ end }} 
 
 {{ define "record-row" }}
-  <tr class="dns-records__row" id="{{.Hash}}">
+  <tr class="dns-records__row fade-in" id="{{.Hash}}">
     <td>{{.Type}}</td>
     <td>{{.FQDN}}</td>
     <td>directs to {{.IP}}</td>
@@ -56,7 +56,7 @@ Dashboard
             id="dns-entry-form"
             class="dns-entry__form"
             hx-post="/records"
-            hx-swap="afterbegin settle=1s"
+            hx-swap="afterbegin"
             hx-target="#dns_records_table tbody"
             hx-indicator="#spinner"
           >
