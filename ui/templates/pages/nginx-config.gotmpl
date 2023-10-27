@@ -10,164 +10,124 @@ Nginx Config
 <div class="nginx-config-wrapper">
       
     <div class="nginx-config-form">
-      <form 
-        class="nginx-config__form"
-        hx-put="/dashboard/config/nginx"
-        hx-target="#nginx-config-snippet"
-        hx-swap="innerHTML transition:true">
+      
+      <h5 class="config-title"> Nginx Config Options</h5>
+        <form class="nginx-config__form" hx-put="/dashboard/config/nginx" hx-target="#nginx-config-snippet" hx-swap="innerHTML transition:true">
 
-        <div class="nginx-config__group">
-          <input type="hidden" name="hash" value="{{.Hash}}">
-          <label for="domain">Domain</label>
-          <input
-            type="text"
-            id="domain"
-            name="domain"
-            placeholder="Enter Domain"
-            value="{{ .Domain }}"
-            readonly
-            disabled
-          />
-        </div>
+          <div class="checkbox-group">
+          <span>Server</span>
+          <div class="input-group">
+            <label for="domain">Domain</label>
+            <input type="text" id="domain" name="domain" placeholder="Enter Domain" value="{{ .Domain }}" readonly disabled />
+            <input type="hidden"  name="hash" value="{{ .Hash }}"  />
+          </div>
 
-        <div class="nginx-config__group">
-          <label for="serviceAddress">Service/Container Address</label>
-          <input
-            type="text"
-            id="serviceAddress"
-            placeholder="Enter Service Address"
-            value="{{.Addr}}" id="listen-address"
-            name="listen_address" 
-            class="field__input" 
-            placeholder="e.g., http://localhost:8080"
-          />
-        </div>
+          <div class="input-group">
+            <label for="serviceAddress">Service/Container Address</label>
+            <input type="text" id="serviceAddress" placeholder="Enter Service Address" value="{{.Addr}}" id="listen-address" name="listen_address" class="field__input" placeholder="e.g., http://localhost:8080" />
+          </div>
+          </div>
 
-        <div class="nginx-config__group">
-          <label>
-            <input
-              type="checkbox"
-              class="nginx-config__checkbox"
-              name="use_http2"
-            />
-            Use HTTP2
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              class="nginx-config__checkbox"
-              name="ws_headers"
-            />
-            Include WebSocket Headers
-          </label>
-        </div>
+          <div class="checkbox-group">
+            <label>
+              <input type="checkbox" name="use_http2" />
+              Use HTTP2
+            </label>
+            <label class="b-contain">
+              <input type="checkbox" name="ws_headers" />
+              Include WebSocket Headers
+            </label>
+          </div>
 
-        <fieldset class="nginx-config__group">
-          <legend>OCSP DNS Resolvers</legend>
-          <label>
-            <input
-              type="checkbox"
-              class="nginx-config__checkbox"
-              name="cloudflare_resolver"
-            />
-            Cloudflare Resolver
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              class="nginx-config__checkbox"
-              name="google_public_dns"
-            />
-            Google Public DNS
-          </label>
-        </fieldset>
+          <div class="checkbox-group">
+            <span>OCSP DNS Resolvers</span>
+            <label>
+              <input type="checkbox" name="cloudflare_resolver" />
+              Cloudflare Resolver
+            </label>
+            <label>
+              <input type="checkbox" name="google_public_dns" />
+              Google Public DNS
+            </label>
+          </div>
 
-        <fieldset class="nginx-config__group">
-          <legend>Logging and rate limiting</legend>
-          <label>
-            <input
-              type="checkbox"
-              class="nginx-config__checkbox"
-              name="enable_logging"
-            />
-            Enable Logging
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              class="nginx-config__checkbox"
-              name="enable_rate_limiting"
-            />
-            Enable Rate Limiting
-          </label>
-        </fieldset>
+          <div class="checkbox-group">
+            <span>Logging and rate limiting</span>
+            <label>
+              <input type="checkbox" name="enable_logging" />
+              Enable Logging
+            </label>
+            <label>
+              <input type="checkbox" name="enable_rate_limiting" />
+              Enable Rate Limiting
+            </label>
+          </div>
 
-        <fieldset class="nginx-config__group">
-          <legend>HTTPS</legend>
-          <label>
-            <input
-              type="checkbox"
-              class="nginx-config__checkbox"
-              name="force_https"
-              checked
-              disabled
-            />
-            Force HTTPS (http://* → https://*)
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              class="nginx-config__checkbox"
-              name="strict_transport"
-            />
-            Enable Strict Transport Security
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              class="nginx-config__checkbox"
-              name="include_subdomains"
-            />
-            IncludeSubDomains directive
-          </label>
-        </fieldset>
+          <div class="checkbox-group">
+            <span>HTTPS</span>
+            <label>
+              <input type="checkbox" name="force_https" checked disabled />
+              Force HTTPS (http://* → https://*)
+            </label>
+            <label>
+              <input type="checkbox" name="strict_transport" />
+              Enable Strict Transport Security
+            </label>
+            <label>
+              <input type="checkbox" name="include_subdomains" />
+              IncludeSubDomains directive
+            </label>
+          </div>
 
-        <button type="submit" class="btn">Generate Config</button>
-      </form>
+          <button type="submit" class="btn">Generate Config</button>
+        </form>
     </div>
 
       <div class="nginx-config-display">
 
-        <h4 class="config-title">Configuration Name</h4>
+    <h5 class="config-title">/etc/nginx/sites-available/{{- .Domain -}}</h5>
 
         <div class="highlight-js-wrapper">
         <pre class="display__code">
             <code class="nginx" id="nginx-config-snippet">
                 {{- template "nginx" . -}}
             </code>
-        </pre>
+         <div class="config-actions">
+                <button class="btn" id="btn-config-download" download="{{- .Domain -}}">Download</button>
+                <button class="btn " onclick="copyToClipboard()">Copy to Clipboard</button>
+            </div>
+          </pre>
         </div>
-
-        <button class="btn" download="{{- .Domain -}}">Download</button>
-        <button class="btn" onclick="copyToClipboard()">Copy to Clipboard</button>
+   
     </div>
 
 </div>
 <script>
-    document.getElementById('downloadLink').addEventListener('click', function () {
-        var text = document.querySelector('.display__code code').textContent.trim();
-        var comment = [
-            "# Configuration file generated by DNSAPI.",
-            "# Generated on: " + new Date().toLocaleString(),
-            "# versions:",
-            "#   DNSAPI v0.1.0",
-            "\n",
-        ].join("\n");
-        var fullText = comment + text;
-        var blob = new Blob([fullText], { type: 'text/plain' });
-        var url = window.URL.createObjectURL(blob);
-        this.href = url;
-    });
+    
+document.getElementById('btn-config-download').addEventListener('click', function () {
+    var text = document.querySelector('.display__code code').textContent.trim();
+    var comment = [
+        "# Configuration file generated by DNSify.",
+        "# Generated on: " + new Date().toLocaleString(),
+        "# versions:",
+        "#   DNSify v0.1.0",
+        "\n",
+    ].join("\n");
+    var fullText = comment + text;
+    var blob = new Blob([fullText], { type: 'text/plain' });
+    var url = window.URL.createObjectURL(blob);
+    
+    var tempLink = document.createElement('a');
+    tempLink.href = url;
+
+    var filename = this.getAttribute('download') || 'config.txt';
+    tempLink.setAttribute('download', filename);
+
+    document.body.appendChild(tempLink);
+    tempLink.click();
+    document.body.removeChild(tempLink);
+});
+
 
     function copyToClipboard() {
         const range = document.createRange();

@@ -1,7 +1,8 @@
 .nginx-config-wrapper {
   display: flex;
   justify-content: space-between;
-  padding: var(--space-l);
+  gap: 1rem;
+  margin-top: var(--space-m);
 }
 
 .nginx-config-form {
@@ -12,95 +13,73 @@
 .nginx-config-display {
   flex-grow: 1;
   position: relative;
-  padding: var(--space-l);
   overflow: hidden;
 }
 
 .config-title {
   margin: 0;
-  margin-bottom: var(--space-m);
+  padding: 0;
 }
 
 .highlight-js-wrapper {
   position: relative;
 }
+.display__code {
+  position: relative;
+  margin: 0;
+  padding: 0;
+}
+
 .nginx-config__form {
-  background-color: var(--bg-color);
-  padding: var(--space-m);
-  border-radius: 8px;
-  max-width: 500px;
+  font-family: Arial, sans-serif;
   margin: 0 auto;
+  padding: 24px;
 }
 
-.nginx-config__group {
-  margin-bottom: var(--space-m);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
+.checkbox-group {
+  margin-bottom: var(--space-s);
 }
 
-.nginx-config__group > label {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
+.input-group {
+  margin-bottom: var(--space-xs);
 }
-
-.nginx-config__form input[type="text"] {
-  padding: var(--space-xs);
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  width: 100%;
+.input-group label,
+.checkbox-group label {
+  display: block;
+  margin-bottom: 4px;
   color: var(--text-color);
 }
 
-.nginx-config__form input[type="text"]:focus {
-  border-color: var(--special-color);
-  outline: none;
-}
-
-/* Custom Checkbox */
-.nginx-config__checkbox {
-  appearance: none;
-  background-color: var(--input-color);
-  border: 2px solid var(--border-color);
-  width: 20px;
-  height: 20px;
+.input-group input[type="text"] {
+  width: 100%;
+  padding: 8px;
+  margin-left: 28px;
+  border: 1px solid var(--border-color);
   border-radius: 4px;
-  vertical-align: middle;
+  color: var(--text-color);
+  background-color: var(--input-bg-color);
+}
+
+.checkbox-group label {
+  margin-right: 16px;
   position: relative;
+  padding-left: 28px;
   cursor: pointer;
-  transition:
-    background-color 0.3s,
-    border-color 0.3s;
-
-  background-size: 16px 16px;
-  background-position: center center;
-  background-repeat: no-repeat;
+}
+.checkbox-group span {
+  display: block;
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--text-strong-color);
 }
 
-.nginx-config__checkbox:checked {
-  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M9 21.035l-9-8.638 2.791-2.87 6.156 5.874 12.21-12.436 2.843 2.817z" fill="%23747508"/></svg>');
-  background-repeat: no-repeat;
-  background-position: center center;
-  border-color: var(--text-soft-color);
+.config-actions {
+  position: absolute;
+  top: var(--space-m);
+  right: var(--space-xs);
+  display: flex;
+  gap: 1rem;
 }
-
-.nginx-config__checkbox:focus-visible {
-  outline: 2px solid var(--outline-color);
-  outline-offset: 2px;
-}
-
-.nginx-config__checkbox:disabled {
-  cursor: not-allowed;
-  border-color: var(--text-soft-color);
-  background-color: var(--subtle-color);
-}
-
-.nginx-config__checkbox:checked:disabled {
-  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M9 21.035l-9-8.638 2.791-2.87 6.156 5.874 12.21-12.436 2.843 2.817z" fill="%23484848"/></svg>');
-  border-color: var(--text-soft-color);
-}
-/* Animation */
 
 @keyframes nginx-fade-in {
   from {
@@ -148,4 +127,53 @@
   animation:
     180ms cubic-bezier(0, 0, 0.2, 1) 90ms both nginx-fade-in,
     180ms cubic-bezier(0.4, 0, 0.2, 1) 90ms both nginx-slide-from-right;
+}
+
+/* HJS custom theme  */
+
+.hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 0.5em;
+  background: var(--bg-color);
+  color: var(--text-color);
+}
+
+/* Resetting the parsed sections within strings */
+
+[data-theme="dark"] .hljs {
+  background: var(--subtle-color);
+  color: var(--text-color);
+}
+
+[data-theme="dark"] .hljs-keyword,
+[data-theme="dark"] .hljs-selector-tag,
+[data-theme="dark"] .hljs-meta-keyword {
+  color: var(--special-color);
+}
+
+[data-theme="dark"] .hljs-string,
+[data-theme="dark"] .hljs-attribute,
+[data-theme="dark"] .hljs-symbol,
+[data-theme="dark"] .hljs-bullet,
+[data-theme="dark"] .hljs-subst {
+  color: var(--text-soft-color);
+}
+
+[data-theme="dark"] .hljs-comment,
+[data-theme="dark"] .hljs-quote {
+  color: var(--text-strong-color);
+}
+
+/* TODO */
+[data-theme="dark"] .hljs-number,
+[data-theme="dark"] .hljs-regexp,
+[data-theme="dark"] .hljs-literal {
+}
+
+/* TODO */
+[data-theme="dark"] .hljs-title,
+[data-theme="dark"] .hljs-variable,
+[data-theme="dark"] .hljs-template-variable,
+[data-theme="dark"] .hljs-type {
 }
