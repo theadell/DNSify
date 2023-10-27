@@ -1,114 +1,105 @@
-/* Base styles */
-.config {
+.nginx-config-wrapper {
   display: flex;
-  padding: 1rem;
-  margin-top: 1rem;
-  gap: 1rem;
-  justify-content: center;
-  max-width: 100%;
+  justify-content: space-between;
+  padding: var(--space-l);
 }
 
-/* Form styles */
-
-.config__form {
-  width: 40%;
-  max-width: 600px;
+.nginx-config-form {
+  flex-basis: 40%;
+  max-width: 40%;
 }
-.form__section {
-  padding: 5px;
-  margin-bottom: 10px;
-  border-radius: 4px;
+
+.nginx-config-display {
+  flex-grow: 1;
+  position: relative;
+  padding: var(--space-l);
+  overflow: hidden;
+}
+
+.config-title {
+  margin: 0;
+  margin-bottom: var(--space-m);
+}
+
+.highlight-js-wrapper {
+  position: relative;
+}
+.nginx-config__form {
+  background-color: var(--bg-color);
+  padding: var(--space-m);
+  border-radius: 8px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.nginx-config__group {
+  margin-bottom: var(--space-m);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-xs);
 }
 
-.form__section .form__field {
-  padding-left: 2em;
-}
-
-.section__title {
-  font-weight: 500;
-  margin: 5px 0;
-}
-
-/* Resetting font weight for labels */
-.field__label {
-  font-weight: normal;
-}
-
-.field__label {
-  display: block;
-  margin-bottom: 8px;
-}
-
-.field__input {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-.form__field--checkbox {
+.nginx-config__group > label {
   display: flex;
   align-items: center;
+  gap: var(--space-xs);
 }
-.form__field input[type="checkbox"] {
+
+.nginx-config__form input[type="text"] {
+  padding: var(--space-xs);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  width: 100%;
+  color: var(--text-color);
+}
+
+.nginx-config__form input[type="text"]:focus {
+  border-color: var(--special-color);
+  outline: none;
+}
+
+/* Custom Checkbox */
+.nginx-config__checkbox {
+  appearance: none;
+  background-color: var(--input-color);
+  border: 2px solid var(--border-color);
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
   vertical-align: middle;
-}
-.field__checkbox {
-  margin-right: 10px;
-}
-
-.form__submit-button {
-  margin-left: auto;
-}
-/* Display styles */
-.config__display {
   position: relative;
-  width: 60%;
-}
-.display__label {
-  margin: 0;
-  padding: 0;
-  margin-top: 5px;
-}
-.display__actions {
-  position: absolute;
-  top: 0px;
-  right: 0px;
-  display: flex;
-  gap: 10px;
-  transform: translate(-4%, 200%);
-}
-
-.actions__btn {
-  border: none;
-  padding: 5px 10px;
   cursor: pointer;
-  border-radius: 5px;
-  transition: background-color 0.3s;
+  transition:
+    background-color 0.3s,
+    border-color 0.3s;
+
+  background-size: 16px 16px;
+  background-position: center center;
+  background-repeat: no-repeat;
 }
 
-.actions__btn--copy {
-  background-color: #333;
-  color: #fff;
+.nginx-config__checkbox:checked {
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M9 21.035l-9-8.638 2.791-2.87 6.156 5.874 12.21-12.436 2.843 2.817z" fill="%23747508"/></svg>');
+  background-repeat: no-repeat;
+  background-position: center center;
+  border-color: var(--text-soft-color);
 }
 
-.actions__btn--copy:hover {
-  background-color: #555;
+.nginx-config__checkbox:focus-visible {
+  outline: 2px solid var(--outline-color);
+  outline-offset: 2px;
 }
 
-.actions__btn--download {
-  background-color: #28a745;
-  color: #fff;
-  text-decoration: none;
+.nginx-config__checkbox:disabled {
+  cursor: not-allowed;
+  border-color: var(--text-soft-color);
+  background-color: var(--subtle-color);
 }
 
-.actions__btn--download:hover {
-  background-color: #218838;
+.nginx-config__checkbox:checked:disabled {
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M9 21.035l-9-8.638 2.791-2.87 6.156 5.874 12.21-12.436 2.843 2.817z" fill="%23484848"/></svg>');
+  border-color: var(--text-soft-color);
 }
-
 /* Animation */
 
 @keyframes nginx-fade-in {

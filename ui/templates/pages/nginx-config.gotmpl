@@ -7,96 +7,149 @@ Nginx Config
 {{ end }}
 {{ define "content" }}
 
-<div class="config">
+<div class="nginx-config-wrapper">
       
-<form class="config__form" 
-      hx-put="/dashboard/config/nginx"
-      hx-target="#nginx-config-snippet"
-      hx-swap="innerHTML transition:true">
+    <div class="nginx-config-form">
+      <form 
+        class="nginx-config__form"
+        hx-put="/dashboard/config/nginx"
+        hx-target="#nginx-config-snippet"
+        hx-swap="innerHTML transition:true">
 
-    <div class="form__section">
-    <input type="hidden" name="hash" value="{{.Hash}}">
-    <h4 class="section__title">Server</h4>
-    <div class="form__field">
-        <label for="domain" class="field__label">Domain:</label>
-        <input type="text" id="domain" name="domain" class="field__input" value="{{ .Domain }}" readonly disabled>
-    </div>
-
-    <div class="form__field form__field--listen">
-        <label for="listen-address" class="field__label">Service/Container Address:</label>
-        <input type="text" value="{{.Addr}}" id="listen-address" name="listen_address" class="field__input" placeholder="e.g., http://localhost:8080">
-    </div>
-
-    <div class="form__field form__field--checkbox">
-        <input type="checkbox" id="use-http2" name="use_http2" class="field__checkbox">
-        <label for="use-http2" class="field__label"> Use HTTP2 </label>
-    </div>
- 
-    <div class="form__field form__field--checkbox">
-        <input type="checkbox" id="ws-headers" name="ws_headers" class="field__checkbox">
-        <label for="ws-headers" class="field__label">Include WebSocket Headers</label>
-    </div>
- 
-    </div>
-
-    <div class="form__section">
-        <h4 class="section__title">OCSP DNS Resolvers:</h4>
-        <div class="form__field form__field--checkbox">
-            <input type="checkbox" id="cloudflare-resolver" name="cloudflare_resolver" class="field__checkbox">
-            <label for="cloudflare-resolver" class="field__label">Cloudflare Resolver</label>
+        <div class="nginx-config__group">
+          <input type="hidden" name="hash" value="{{.Hash}}">
+          <label for="domain">Domain</label>
+          <input
+            type="text"
+            id="domain"
+            name="domain"
+            placeholder="Enter Domain"
+            value="{{ .Domain }}"
+            readonly
+            disabled
+          />
         </div>
-        <div class="form__field form__field--checkbox">
-            <input type="checkbox" id="google-public-dns" name="google_public_dns" class="field__checkbox">
-            <label for="google-public-dns" class="field__label">Google Public DNS</label>
+
+        <div class="nginx-config__group">
+          <label for="serviceAddress">Service/Container Address</label>
+          <input
+            type="text"
+            id="serviceAddress"
+            placeholder="Enter Service Address"
+            value="{{.Addr}}" id="listen-address"
+            name="listen_address" 
+            class="field__input" 
+            placeholder="e.g., http://localhost:8080"
+          />
         </div>
+
+        <div class="nginx-config__group">
+          <label>
+            <input
+              type="checkbox"
+              class="nginx-config__checkbox"
+              name="use_http2"
+            />
+            Use HTTP2
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              class="nginx-config__checkbox"
+              name="ws_headers"
+            />
+            Include WebSocket Headers
+          </label>
+        </div>
+
+        <fieldset class="nginx-config__group">
+          <legend>OCSP DNS Resolvers</legend>
+          <label>
+            <input
+              type="checkbox"
+              class="nginx-config__checkbox"
+              name="cloudflare_resolver"
+            />
+            Cloudflare Resolver
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              class="nginx-config__checkbox"
+              name="google_public_dns"
+            />
+            Google Public DNS
+          </label>
+        </fieldset>
+
+        <fieldset class="nginx-config__group">
+          <legend>Logging and rate limiting</legend>
+          <label>
+            <input
+              type="checkbox"
+              class="nginx-config__checkbox"
+              name="enable_logging"
+            />
+            Enable Logging
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              class="nginx-config__checkbox"
+              name="enable_rate_limiting"
+            />
+            Enable Rate Limiting
+          </label>
+        </fieldset>
+
+        <fieldset class="nginx-config__group">
+          <legend>HTTPS</legend>
+          <label>
+            <input
+              type="checkbox"
+              class="nginx-config__checkbox"
+              name="force_https"
+              checked
+              disabled
+            />
+            Force HTTPS (http://* → https://*)
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              class="nginx-config__checkbox"
+              name="strict_transport"
+            />
+            Enable Strict Transport Security
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              class="nginx-config__checkbox"
+              name="include_subdomains"
+            />
+            IncludeSubDomains directive
+          </label>
+        </fieldset>
+
+        <button type="submit" class="btn">Generate Config</button>
+      </form>
     </div>
 
-    <div class="form__section">
-    <h4 class="section__title"> Logging and rate limiting</h4>
-    <div class="form__field form__field--checkbox">
-        <input type="checkbox" id="enable-logging" name="enable_logging" class="field__checkbox">
-        <label for="enable-logging" class="field__label">Enable Logging</label>
-    </div>
+      <div class="nginx-config-display">
 
-    <div class="form__field form__field--checkbox">
-        <input type="checkbox" id="enable-rate-limiting" name="enable_rate_limiting" class="field__checkbox">
-        <label for="enable-rate-limiting" class="field__label">Enable Rate Limiting</label>
-    </div>
-    </div>
+        <h4 class="config-title">Configuration Name</h4>
 
-    <div class="form__section">
-        <h4 class="section__title">HTTPS:</h4>
-        <div class="form__field form__field--checkbox">
-            <input type="checkbox" id="force-https" name="force_https" class="field__checkbox" checked disabled>
-            <label for="force-https" class="field__label">Force HTTPS (http://* &rarr; https://*)</label>
-        </div>
-        <div class="form__field form__field--checkbox">
-            <input type="checkbox" id="strict-transport" name="strict_transport" class="field__checkbox">
-            <label for="strict-transport" class="field__label">Enable Strict Transport Security</label>
-        </div>
-        <div class="form__field form__field--checkbox">
-            <input type="checkbox" id="include-subdomains" name="include_subdomains" class="field__checkbox">
-            <label for="include-subdomains" class="field__label">IncludeSubDomains directive</label>
-        </div>
-    </div>
-
-    <div class="form__field">
-        <button type="submit" class="btn form__submit-button">Apply</button>
-    </div>
-</form>
-      <div class="config__display">
-        <p class="display__label"> /etc/nginx/sites-available/{{.Domain}}</p>
+        <div class="highlight-js-wrapper">
         <pre class="display__code">
             <code class="nginx" id="nginx-config-snippet">
                 {{- template "nginx" . -}}
             </code>
         </pre>
-
-        <div class="display__actions">
-            <button class="actions__btn actions__btn--copy" onclick="copyToClipboard()">Copy to Clipboard</button>
-            <a href="#" id="downloadLink" class="actions__btn actions__btn--download" download="{{- .Domain -}}">
-                Download</a>
         </div>
+
+        <button class="btn" download="{{- .Domain -}}">Download</button>
+        <button class="btn" onclick="copyToClipboard()">Copy to Clipboard</button>
     </div>
 
 </div>
