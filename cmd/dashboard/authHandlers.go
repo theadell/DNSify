@@ -6,6 +6,8 @@ import (
 	"log/slog"
 	"net/http"
 	"strings"
+
+	"golang.org/x/oauth2"
 )
 
 const (
@@ -30,15 +32,14 @@ func (app *App) initiateOAuthProcess(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to generate state", http.StatusInternalServerError)
 	}
 	app.sessionManager.Put(r.Context(), StateKey, state)
-	// codeVerifier, err := GenerateSecureRandom(32)
-	// if err != nil {
-	// 	http.Error(w, "Failed to generate code verifier", http.StatusInternalServerError)
-	// 	return
-	// }
-	// app.SessionStore.Put(r.Context(), CodeVerifierKey, codeVerifier)
-	// codeChallenge := GenerateCodeChallenge(codeVerifier)
-	// url := app.OauthClient.AuthCodeURL(state, oauth2.SetAuthURLParam(CodeChallengeKey, codeChallenge), oauth2.SetAuthURLParam(CodeChallengeMethodKey, "S256"))
-	url := app.oauthClient.AuthCodeURL(state)
+	codeVerifier, err := GenerateSecureRandom(32)
+	if err != nil {
+		http.Error(w, "Failed to generate code verifier", http.StatusInternalServerError)
+		return
+	}
+	app.sessionManager.Put(r.Context(), CodeVerifierKey, codeVerifier)
+	codeChallenge := GenerateCodeChallenge(codeVerifier)
+	url := app.oauthClient.AuthCodeURL(state, oauth2.SetAuthURLParam(CodeChallengeKey, codeChallenge), oauth2.SetAuthURLParam(CodeChallengeMethodKey, "S256"))
 	http.Redirect(w, r, url, http.StatusSeeOther)
 }
 
@@ -57,12 +58,16 @@ func (app *App) handleOAuthCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	codeVerifier := app.sessionManager.GetString(r.Context(), CodeVerifierKey)
+	if codeVerifier == "" {
+		app.clientError(w, http.StatusBadRequest, "Code verifier not found")
+		return
+	}
 	code := r.URL.Query().Get("code")
-	token, err := app.oauthClient.Exchange(r.Context(), code)
+	token, err := app.oauthClient.Exchange(r.Context(), code, oauth2.SetAuthURLParam(CodeVerifierKey, codeVerifier))
 
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to exchange token"})
+		app.serverError(w, err)
 		return
 	}
 	if !token.Valid() {

@@ -70,7 +70,7 @@ func setupOAuthClient(cfg *Config, useMockOAuth bool) *oauth2.Config {
 			ClientID:     cfg.OAuth2ClientConfig.ClientID,
 			ClientSecret: cfg.OAuth2ClientConfig.ClientSecret,
 			RedirectURL:  cfg.OAuth2ClientConfig.RedirectURL,
-			Scopes:       []string{"openid", "microprofile-jwt"},
+			Scopes:       []string{"openid"},
 			Endpoint: oauth2.Endpoint{
 				AuthURL:  "http://localhost:9999/auth",
 				TokenURL: "http://localhost:9999/token",
@@ -82,7 +82,7 @@ func setupOAuthClient(cfg *Config, useMockOAuth bool) *oauth2.Config {
 		ClientID:     cfg.OAuth2ClientConfig.ClientID,
 		ClientSecret: cfg.OAuth2ClientConfig.ClientSecret,
 		RedirectURL:  cfg.OAuth2ClientConfig.RedirectURL,
-		Scopes:       []string{"openid", "microprofile-jwt"},
+		Scopes:       []string{"openid"},
 		Endpoint: oauth2.Endpoint{
 			AuthURL:  cfg.OAuth2ClientConfig.AuthURL,
 			TokenURL: cfg.OAuth2ClientConfig.TokenURL,
