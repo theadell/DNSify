@@ -100,6 +100,7 @@ select {
   --special-mark-color: rgba(255, 255, 255, 0.08);
   --light-color: rgb(250, 242, 243);
   --dark-color: rgb(87, 65, 69);
+  --disabled-text-color: rgb(150, 150, 150);
 
   /* Spacing System */
   --space-3xs: clamp(0.25rem, 0.1964rem + 0.1429vw, 0.3125rem);
@@ -133,6 +134,7 @@ select {
   --special-mark-color: rgba(226, 222, 223, 0.08);
   --light-color: rgb(230, 206, 210);
   --dark-color: rgb(64, 49, 51);
+  --disabled-text-color: rgb(100, 100, 100);
 }
 
 /* General Styles */
@@ -444,6 +446,11 @@ p {
   color: var(--text-strong-color);
 }
 
+.dns-entry__type--disabled {
+  color: var(--disabled-text-color);
+  cursor: not-allowed;
+  pointer-events: none;
+}
 .dns-entry__separator {
   height: 1px;
   margin-top: 0.5rem;

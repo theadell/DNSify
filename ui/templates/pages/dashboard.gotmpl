@@ -39,13 +39,18 @@ Dashboard
         <div class="dns-entry__type-selector">
           <ul class="dns-entry__types">
             <template x-for="type in dnsTypes" :key="type">
-              <li
-                :class="{ 'dns-entry__type--active': activeType === type }"
+            <li
+                x-data="{ showTooltip: false }"
+                :class="{ 
+                    'dns-entry__type--active': activeType === type,
+                    'dns-entry__type--disabled': !supportedTypes.includes(type)
+                }"
                 class="dns-entry__type"
-                @click="activeType = type"
-              >
+                @click="supportedTypes.includes(type) && (activeType = type)"
+                :aria-disabled="!supportedTypes.includes(type)"
+            >
                 <span x-text="type"></span>
-              </li>
+            </li>
             </template>
           </ul>
         </div>
@@ -172,6 +177,7 @@ Dashboard
       const dnsForm = {
         activeType: "A",
         dnsTypes: ["A", "AAAA", "CNAME", "NS", "MX"],
+        supportedTypes: ["A", "AAAA"],
         hostname: "",
         ip: "",
         ttl: "3600",
