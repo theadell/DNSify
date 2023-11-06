@@ -1,0 +1,23 @@
+.floating__action {
+  position: absolute;
+  z-index: 100;
+  top: 1em;
+  color: var(--foreground);
+  border: 2px solid currentColor;
+  width: 30px;
+  height: 30px;
+  border-radius: 5px;
+  padding: 4px;
+  background: transparent;
+  cursor: pointer;
+}
+.floating__action-toggle {
+  right: 1em;
+}
+.floating__action-settings {
+  right: 3.5em;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

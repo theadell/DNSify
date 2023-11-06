@@ -45,6 +45,24 @@ func loadTemplates(tmplFS embed.FS) map[string]*template.Template {
 		}
 	}
 
+	partials, err := tmplFS.ReadDir("templates/partials")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, partial := range partials {
+		partialName := stripExtension(partial.Name())
+		partialContent, err := tmplFS.ReadFile("templates/partials/" + partial.Name())
+		if err != nil {
+			log.Fatal(err)
+		}
+		_, err = baseTemplate.New(partialName).Parse(string(partialContent))
+		if err != nil {
+			log.Fatal(err)
+		}
+
+	}
+
 	pages, err := tmplFS.ReadDir("templates/pages")
 	if err != nil {
 		log.Fatal(err)

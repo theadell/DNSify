@@ -214,20 +214,7 @@ p {
   padding: 2rem;
   width: 100%;
 }
-.dark-mode-toggle {
-  position: absolute;
-  z-index: 100;
-  top: 1em;
-  right: 1em;
-  color: var(--foreground);
-  border: 2px solid currentColor;
-  padding: 4px;
-  background: transparent;
-  cursor: pointer;
-  border-radius: 5px;
-  width: 30px;
-  height: 30px;
-}
+
 .heading {
   margin-top: 0;
   color: var(--special-color);
@@ -782,6 +769,9 @@ input.error {
   100% {
     opacity: 0;
   }
+}
+.fade-row-out.htmx-swapping {
+  animation: fadeOutAnim 1s ease-out forwards;
 }
 .slide-right {
   opacity: 0;

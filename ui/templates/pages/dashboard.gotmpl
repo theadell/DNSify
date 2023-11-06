@@ -2,8 +2,9 @@
 Dashboard 
 {{ end }} 
 
+
 {{ define "record-row" }}
-  <tr class="dns-records__row fade-in" id="{{.Hash}}">
+  <tr class="dns-records__row fade-in fade-row-out" id="{{.Hash}}">
     <td>{{.Type}}</td>
     <td>{{.FQDN}}</td>
     <td>directs to {{.IP}}</td>
@@ -25,6 +26,7 @@ Dashboard
 {{ end }}
 
 {{ define "content" }}
+{{ template "settings-btn"}}
 <div class="container" >
   <h2 class="heading">rusty-leipzig.com</h2>
 
