@@ -21,3 +21,6 @@
 go.work
 
 .DS_Store
+
+# keys file 
+keys.json

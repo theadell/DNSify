@@ -33,6 +33,9 @@ func (app *App) Routes() http.Handler {
 		r.HandleFunc("/status", app.StatusSSEHandler)
 		r.Route("/dashboard", func(r chi.Router) {
 			r.Get("/", app.DashboardHandler)
+			r.Get("/apikeys", app.SettingsHandler)
+			r.Post("/apikeys", app.CreateAPIKeyHandler)
+			r.Delete("/apikeys/{label}", app.DeleteAPIKeyHandler)
 			r.Post("/config/nginx", app.configHandler)
 			r.Put("/config/nginx", app.configAdjusterHandler)
 		})

@@ -43,6 +43,7 @@ func generateMockIDToken() (string, error) {
 		"name":               "John Doe",
 		"upn":                "jdoe",
 		"preferred_username": "jdoe",
+		"email":              "test@test.com",
 	}
 	claimsBytes, err := json.Marshal(claims)
 	if err != nil {

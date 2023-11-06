@@ -1,0 +1,80 @@
+.api-keys-container {
+  width: 100%;
+  padding: 1rem;
+  margin: 0;
+  margin-top: 2rem;
+}
+
+.api-keys-title {
+  font-size: 1.75rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.api-keys-description {
+  margin: 1rem 0;
+}
+
+.api-keys-form {
+  margin-bottom: 2rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.api-key-input {
+  flex-grow: 1;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.25rem;
+}
+
+.api-keys-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+}
+
+.api-keys-table th,
+.api-keys-table td {
+  padding: 12px;
+  text-align: left;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border-color);
+}
+.api-keys-table th {
+  background-color: #f2f2f2;
+  color: var(--text-color);
+}
+[data-theme="dark"] .api-keys-table th {
+  background-color: #2e3a47;
+}
+
+.api-keys-table tbody tr:hover {
+  background-color: var(--subtle-color);
+}
+
+.api-keys-table tbody tr:not(:last-child) td {
+  border-bottom: 1px solid var(--border-color);
+}
+.api-key-actions {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.api-keys-usage {
+  margin-top: 1rem;
+}
+
+.api-keys-usage-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
+.api-keys-code {
+  display: block;
+  background-color: var(--mark-color);
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  font-family: monospace;
+}

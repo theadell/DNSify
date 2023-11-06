@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"os"
 	"sync"
+	"time"
 )
 
 type fileAPIKeyManager struct {
@@ -36,13 +37,8 @@ func (m *fileAPIKeyManager) loadKeys() error {
 		m.keys = make(map[string][]APIKey)
 		return nil
 	}
-	var keys []APIKey
-	if err := json.Unmarshal(data, &keys); err != nil {
+	if err := json.Unmarshal(data, &m.keys); err != nil {
 		return err
-	}
-
-	for _, key := range keys {
-		m.keys[key.UserID] = append(m.keys[key.UserID], key)
 	}
 	return nil
 }
@@ -70,7 +66,7 @@ func (m *fileAPIKeyManager) CreateKey(ctx context.Context, userID, label string)
 	if err != nil {
 		return APIKey{}, err
 	}
-	newKey := APIKey{UserID: userID, Label: label, Key: key}
+	newKey := APIKey{UserID: userID, Label: label, Key: key, CreatedAt: time.Now()}
 	m.keys[userID] = append(m.keys[userID], newKey)
 
 	if err := m.saveKeys(); err != nil {
@@ -98,5 +94,5 @@ func (m *fileAPIKeyManager) DeleteKey(ctx context.Context, userID, label string)
 		}
 	}
 
-	return nil // Key not found or no action needed
+	return nil
 }

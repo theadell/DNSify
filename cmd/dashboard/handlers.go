@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/theadell/dnsify/internal/dnsservice"
 )
 
@@ -18,6 +19,38 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 	records := app.dnsClient.GetRecords()
 
 	app.render(w, http.StatusOK, "dashboard", records)
+}
+func (app *App) SettingsHandler(w http.ResponseWriter, r *http.Request) {
+	user := app.sessionManager.GetString(r.Context(), "email")
+	keys, _ := app.keyManager.GetKeys(r.Context(), user)
+	app.render(w, http.StatusOK, "apikeys", keys)
+}
+
+func (app *App) CreateAPIKeyHandler(w http.ResponseWriter, r *http.Request) {
+	label := r.FormValue("label")
+	if len(label) < 4 {
+		app.clientError(w, http.StatusBadRequest, "Label Must have at least 4 chars")
+		return
+	}
+
+	user := app.sessionManager.GetString(r.Context(), "email")
+	key, err := app.keyManager.CreateKey(r.Context(), user, label)
+	if err != nil {
+		app.serverError(w, err)
+	}
+	app.renderTemplateFragment(w, http.StatusOK, "apikeys", "key-row", key)
+}
+func (app *App) DeleteAPIKeyHandler(w http.ResponseWriter, r *http.Request) {
+	keyLabel := chi.URLParam(r, "label")
+	if len(keyLabel) < 4 {
+		app.clientError(w, http.StatusBadRequest, "Label Must have at least 4 chars")
+		return
+	}
+
+	user := app.sessionManager.GetString(r.Context(), "email")
+	app.keyManager.DeleteKey(r.Context(), user, keyLabel)
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func (app *App) configHandler(w http.ResponseWriter, r *http.Request) {

@@ -11,6 +11,7 @@ import (
 	"syscall"
 
 	"github.com/alexedwards/scs/v2"
+	"github.com/theadell/dnsify/internal/apikeymanager"
 	"github.com/theadell/dnsify/internal/dnsservice"
 	"github.com/theadell/dnsify/internal/mock"
 	"github.com/theadell/dnsify/ui"
@@ -21,6 +22,7 @@ type App struct {
 	config         HTTPServerConfig
 	sessionManager *scs.SessionManager
 	oauthClient    *oauth2.Config
+	keyManager     apikeymanager.APIKeyManager
 	templateCache  map[string]*template.Template
 	dnsClient      dnsservice.Service
 	server         *http.Server
@@ -44,12 +46,16 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error setting up DNS client: %v", err)
 	}
-
+	apikeymanager, err := apikeymanager.NewFileAPIKeyManager("./keys.json")
+	if err != nil {
+		log.Fatalf("Error setting up api keys manager: %v", err)
+	}
 	sessionManager := NewSessionManager(cfg.HTTPServerConfig.SecureCookie)
 	app := &App{
 		config:         cfg.HTTPServerConfig,
 		sessionManager: sessionManager,
 		oauthClient:    oauth2Client,
+		keyManager:     apikeymanager,
 		dnsClient:      bindClient,
 		templateCache:  loadTemplates(ui.TemplatesFS),
 	}

@@ -102,6 +102,7 @@ select {
   --dark-color: rgb(87, 65, 69);
   --disabled-text-color: rgb(150, 150, 150);
 
+  --delete-color: rgb(221, 44, 0);
   /* Spacing System */
   --space-3xs: clamp(0.25rem, 0.1964rem + 0.1429vw, 0.3125rem);
   --space-2xs: clamp(0.5rem, 0.3929rem + 0.2857vw, 0.625rem);
@@ -135,6 +136,8 @@ select {
   --light-color: rgb(230, 206, 210);
   --dark-color: rgb(64, 49, 51);
   --disabled-text-color: rgb(100, 100, 100);
+
+  --delete-color: rgb(255, 69, 58);
 }
 
 /* General Styles */
@@ -330,6 +333,30 @@ p {
   background-color: var(--special-mark-color);
 }
 
+.btn-delete {
+  background-color: var(--bg-color);
+  color: var(--delete-color);
+  border: 1px solid var(--delete-color);
+}
+
+.btn-delete:hover {
+  background-color: var(--delete-color);
+  color: var(--bg-color);
+}
+
+.btn-delete:active {
+  background-color: var(--text-strong-color);
+  color: var(--bg-color);
+}
+
+.btn-delete:focus {
+  outline: 2px solid var(--outline-color);
+}
+
+.btn-delete.toggled {
+  background-color: var(--dark-color);
+  color: var(--bg-color);
+}
 /* INFO BAR */
 .info-bar-sse-wrapper {
   width: 100%;

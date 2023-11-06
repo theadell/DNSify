@@ -4,12 +4,14 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
+	"time"
 )
 
 type APIKey struct {
-	UserID string `json:"userId"`
-	Label  string `json:"label"`
-	Key    string `json:"apiKey"`
+	UserID    string    `json:"userId"`
+	Label     string    `json:"label"`
+	Key       string    `json:"apiKey"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
 type APIKeyManager interface {

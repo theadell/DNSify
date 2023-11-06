@@ -96,7 +96,7 @@ func (app *App) handleOAuthCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var claims struct {
-		UPN string `json:"upn"`
+		Email string `json:"email"`
 	}
 	if err := json.Unmarshal(payload, &claims); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -104,7 +104,8 @@ func (app *App) handleOAuthCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	slog.Info("User logged in", "upn", claims.UPN, "ip", r.RemoteAddr)
+	slog.Info("User logged in", "email", claims.Email, "ip", r.RemoteAddr)
 	app.sessionManager.Put(r.Context(), AuthenticatedKey, true)
+	app.sessionManager.Put(r.Context(), "email", claims.Email)
 	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 }

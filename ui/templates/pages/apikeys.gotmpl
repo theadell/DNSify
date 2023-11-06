@@ -1,0 +1,128 @@
+{{ define "title" }}
+  API Keys  
+{{ end }}
+
+{{ define "additionalStyles" }}
+  <link rel="stylesheet" href="/static/css/apikeys.css">
+{{ end }}
+
+{{ define "key-row" }}
+  <tr class="fade-in fade-row-out">
+  <td> {{ .Label }}</td>
+  <td class="api-key-value">••••••••<span class="real-api-key" hidden>{{.Key}}</span></td>
+  <td>{{ .CreatedAt.Format "Jan 02, 2006 15:04:05 UTC"}}</td>
+  <td></td>
+      <td class="api-key-actions">
+          <button class="btn btn-copy" onclick="copyApiKey(this)">Copy</button>
+          <button 
+              hx-delete="/dashboard/apikeys/{{.Label}}"
+              hx-confirm="Are you sure you want to delete this record?" 
+              hx-target="closest tr" 
+              hx-swap="outerHTML swap:1s"
+              class="btn btn-delete">
+            Delete
+          </button>
+      </td>
+  </tr>
+{{ end }}
+
+
+
+{{ define "content"}}
+
+
+<div class="api-keys-container">
+    <h1 class="api-keys-title">API Keys</h1>
+    <p class="api-keys-description">
+        Use API keys to authenticate programmatic requests to DNSify, such as through webhooks or scripts, for creating and deleting DNS records. Each user can create up to 10 different API keys. <a href="#">Learn more</a>.
+    </p>
+
+    <form 
+      x-data="apiKeyForm()"
+      hx-post=""
+      hx-swap="afterbegin"
+      hx-target="#apiKeys-table tbody"
+      hx-on::after-request="apiKeyForm().resetForm()"
+      hx-indicator="#spinner"
+      class="api-keys-form"
+    >
+        <input  type="text" 
+                name="label" 
+                x-model="label"
+                x-init="init"
+                @input="checkLabel"
+                class="api-key-input" 
+                :class="{ 'error': label.length > 0 && !isLabelValid }"
+                placeholder="Enter key label">
+        <button 
+                type="submit" 
+                class="btn btn-create"
+                :disabled="!isLabelValid">
+                Generate Key
+        </button>
+    </form>
+
+    <div id="spinner" class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
+     <div id="server-error" class="server-error" style="display:none;">
+        <div id="error-message" ></div>
+    </div>
+
+    <h4> Your API Keys </h4>
+
+    <table id="apiKeys-table" class="api-keys-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Key</th>
+                <th>Created</th>
+                <th>Last Authenticated</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+      {{range .}}
+        {{ template "key-row" . }}
+      {{end}}
+        </tbody>
+    </table>
+
+    <div class="api-keys-usage">
+        <h2 class="api-keys-usage-title">How to Use the Keys</h2>
+        <p>Use the API key as the value of the Authorization header in your HTTP requests:</p>
+        <code class="api-keys-code">Authorization: Bearer {API_KEY}</code>
+    </div>
+</div>
+
+<script>
+  function apiKeyForm() {
+      return {
+          label: '',
+          isLabelValid: false,
+          checkLabel() {
+              console.log("Checking label")
+              const labels = Array.from(document.querySelectorAll('#apiKeys-table td:first-child')).map(td => td.textContent.trim());
+              console.log(labels)
+              this.isLabelValid = /^[A-Za-z0-9]{4,}$/.test(this.label) && !labels.includes(this.label);
+          },
+          resetForm() {
+              this.label = '';
+              this.isLabelValid = false;
+          },
+          init() {
+              this.$el.addEventListener('htmx:afterRequest', (e) => {
+              if(e.detail.successful) {
+                  this.resetForm();
+              }
+              });
+          },
+      };
+  }
+
+  function copyApiKey(buttonElement) {
+      var apiKeyElement = buttonElement.closest('tr').querySelector('.real-api-key');
+      navigator.clipboard.writeText(apiKeyElement.textContent).then(function() {}, function(err) {
+          console.error('Could not copy text: ', err);
+      });
+  }
+</script>
+{{ end }}
