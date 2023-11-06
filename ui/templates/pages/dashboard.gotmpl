@@ -1,5 +1,5 @@
 {{ define "title" }} 
-Dashboard 
+DNSify | Dashboard 
 {{ end }} 
 
 
@@ -66,6 +66,7 @@ Dashboard
             hx-swap="afterbegin"
             hx-target="#dns_records_table tbody"
             hx-indicator="#spinner"
+            x-init="init"
           >
             <div
               class="dns-entry__input-group dns-entry__input-group--hostname"
@@ -249,6 +250,21 @@ Dashboard
         setIpDirty: function () {
           this.ipDirty = true;
         },
+
+        resetForm : function() {
+          this.hostname = ''
+          this.ip = ''
+          this.hostnameDirty = false 
+          this.ipDirty = false
+        },
+
+         init() {
+              this.$el.addEventListener('htmx:afterRequest', (e) => {
+              if(e.detail.successful) {
+                  this.resetForm();
+              }
+              });
+          },
       };
     </script>
 <script src="/static/js/index.js"></script>

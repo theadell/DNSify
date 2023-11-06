@@ -99,9 +99,7 @@
           label: '',
           isLabelValid: false,
           checkLabel() {
-              console.log("Checking label")
               const labels = Array.from(document.querySelectorAll('#apiKeys-table td:first-child')).map(td => td.textContent.trim());
-              console.log(labels)
               this.isLabelValid = /^[A-Za-z0-9]{4,}$/.test(this.label) && !labels.includes(this.label);
           },
           resetForm() {
