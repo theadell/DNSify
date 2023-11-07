@@ -133,6 +133,11 @@ func (c *Client) AddRecord(record Record) error {
 }
 
 func (c *Client) RemoveRecord(record Record) error {
+	if c.isImmutable(record.Type, record.FQDN) {
+		slog.Warn("Attempted to delete an immutable record", "record", record.FQDN)
+		return ErrImmutableRecord
+	}
+
 	msg := new(dns.Msg)
 	msg.SetUpdate(c.zone)
 
