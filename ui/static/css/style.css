@@ -102,7 +102,7 @@ select {
   --dark-color: rgb(87, 65, 69);
   --disabled-text-color: rgb(150, 150, 150);
 
-  --delete-color: rgb(221, 44, 0);
+  --danger-color: rgb(221, 44, 0);
   /* Spacing System */
   --space-3xs: clamp(0.25rem, 0.1964rem + 0.1429vw, 0.3125rem);
   --space-2xs: clamp(0.5rem, 0.3929rem + 0.2857vw, 0.625rem);
@@ -137,7 +137,7 @@ select {
   --dark-color: rgb(64, 49, 51);
   --disabled-text-color: rgb(100, 100, 100);
 
-  --delete-color: rgb(255, 69, 58);
+  --danger-color: rgb(255, 69, 58);
 }
 
 /* General Styles */
@@ -335,12 +335,12 @@ p {
 
 .btn-delete {
   background-color: var(--bg-color);
-  color: var(--delete-color);
-  border: 1px solid var(--delete-color);
+  color: var(--danger-color);
+  border: 1px solid var(--danger-color);
 }
 
 .btn-delete:hover {
-  background-color: var(--delete-color);
+  background-color: var(--danger-color);
   color: var(--bg-color);
 }
 

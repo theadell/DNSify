@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"slices"
 	"strings"
 	"time"
 
@@ -17,7 +18,9 @@ func (app *App) IndexHandler(w http.ResponseWriter, r *http.Request) {
 }
 func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 	records := app.dnsClient.GetRecords()
-
+	records = slices.DeleteFunc(records, func(r dnsservice.Record) bool {
+		return r.Type != "A"
+	})
 	app.render(w, http.StatusOK, "dashboard", records)
 }
 func (app *App) SettingsHandler(w http.ResponseWriter, r *http.Request) {
@@ -87,6 +90,19 @@ func (app *App) configAdjusterHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	c := app.createNginxConfigFromForm(r, record)
 	app.render(w, http.StatusOK, "nginx", c)
+}
+
+func (app *App) GetRecordsHandler(w http.ResponseWriter, r *http.Request) {
+	recordType := r.URL.Query().Get("type")
+	if recordType != "A" && recordType != "AAAA" {
+		app.clientError(w, http.StatusBadRequest, "Unsupported record type")
+		return
+	}
+	records := app.dnsClient.GetRecords()
+	records = slices.DeleteFunc(records, func(r dnsservice.Record) bool {
+		return r.Type != recordType
+	})
+	app.renderTemplateFragment(w, http.StatusOK, "dashboard", "record-rows", records)
 }
 
 func (app *App) AddRecordHandler(w http.ResponseWriter, r *http.Request) {

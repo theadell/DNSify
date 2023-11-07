@@ -41,6 +41,7 @@ func (app *App) Routes() http.Handler {
 		})
 
 		r.Route("/records", func(r chi.Router) {
+			r.Get("/", app.GetRecordsHandler)
 			r.Post("/", app.AddRecordHandler)
 			r.Delete("/", app.DeleteRecordHandler)
 		})

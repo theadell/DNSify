@@ -14,7 +14,7 @@ DNSify | Dashboard
         <input type="hidden" name="hash" value="{{.Hash}}">
         <button class="btn btn-clear" type="submit">Config</button>
       </form>
-      <button class="btn btn-special" 
+      <button class="btn btn-delete" 
               hx-delete="/records?Type={{.Type}}&FQDN={{.FQDN}}&IP={{.IP}}&TTL={{.TTL}}"
               hx-confirm="Are you sure you want to delete this record?" 
               hx-target="closest tr" 
@@ -25,6 +25,11 @@ DNSify | Dashboard
   </tr>
 {{ end }}
 
+{{ define "record-rows"}}
+      {{range .}}
+        {{ template "record-row" . }}
+      {{end}}
+{{ end }}
 {{ define "content" }}
 {{ template "settings-btn"}}
 <div class="container" >
@@ -49,7 +54,10 @@ DNSify | Dashboard
                 }"
                 class="dns-entry__type"
                 @click="supportedTypes.includes(type) && (activeType = type)"
-                :aria-disabled="!supportedTypes.includes(type)"
+                :aria-disabled="!supportedTypes.includes(type)"            
+                :hx-get="`/records?type=${type}`"
+                hx-target="#dns_records_table tbody"
+                hx-indicator="#spinner"
             >
                 <span x-text="type"></span>
             </li>
@@ -87,7 +95,8 @@ DNSify | Dashboard
               <span
                 class="dns-entry__error-message"
                 x-show="!validateHostname()"
-                >Invalid subdomain</span
+                x-text="hostnameError">
+              </span
               >
               <span
                 class="dns-entry__fqdn-label"
@@ -182,6 +191,7 @@ DNSify | Dashboard
         dnsTypes: ["A", "AAAA", "CNAME", "NS", "MX"],
         supportedTypes: ["A", "AAAA"],
         hostname: "",
+        hostnameError: '',
         ip: "",
         ttl: "3600",
         hostnameDirty: false,
@@ -194,7 +204,18 @@ DNSify | Dashboard
           if (!this.hostnameDirty) {
             return true;
           }
-          if (!this.hostnameRegex.test(this.hostname.trim())) {
+
+          const existingHostnames = Array.from(document.querySelectorAll('#dns_records_table td:nth-child(2)')).map(td => {
+              const fqdn = td.textContent.trim();
+              const regex = /^(.*?)\.[\w-]+\.[\w-]+\.?$/;
+              const match = fqdn.match(regex);
+              return match ? match[1] : '';
+          });
+          if (existingHostnames.includes(this.hostname.trim())) {
+            this.hostnameError = 'Duplicate subdomain';
+            return false;
+          } else if (!this.hostnameRegex.test(this.hostname.trim())) {
+            this.hostnameError = 'Invalid subdomain';
             return false;
           }
           return true;
@@ -260,11 +281,14 @@ DNSify | Dashboard
 
          init() {
               this.$el.addEventListener('htmx:afterRequest', (e) => {
-              if(e.detail.successful) {
+              if(e.detail.successful && e.detail.requestConfig.verb == "post") {
                   this.resetForm();
               }
               });
           },
+         getRecordsUrl(type) {
+                return `/records?type=${type}`;
+            },
       };
     </script>
 <script src="/static/js/index.js"></script>
