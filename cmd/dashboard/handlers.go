@@ -40,6 +40,7 @@ func (app *App) CreateAPIKeyHandler(w http.ResponseWriter, r *http.Request) {
 	key, err := app.keyManager.CreateKey(r.Context(), user, label)
 	if err != nil {
 		app.serverError(w, err)
+		return
 	}
 	app.renderTemplateFragment(w, http.StatusOK, "apikeys", "key-row", key)
 }
