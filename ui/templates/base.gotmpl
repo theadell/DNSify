@@ -27,50 +27,35 @@
     <meta property="twitter:description" content="Manage and control your DNS records with our efficient, real-time, and user-friendly DNS Management Dashboard designed for BIND." />
     <meta property="twitter:image" content="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=3868&q=80" />
 
-      <link rel="icon" href="/static/img/favicon.png" type="image/png">
+    <link rel="icon" href="/static/img/favicon.png" type="image/png">
     <link href="/static/css/style.css" rel="stylesheet" />
     <link href="/static/css/partials.css" rel="stylesheet" />
-    {{ block "additionalStyles" . }}{{ end }}
+
+    {{ block "additionalStyles" . }}
+
+    {{ end }}
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap"
       rel="stylesheet"
     />
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&display=swap" rel="stylesheet">
 
     <!-- Alpine js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <!-- Material Icons -->
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
   </head>
   <body>
 
-  <button id="dark-mode-toggle" class="floating__action floating__action-toggle">
-    <svg width="100%" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 496"><path fill="currentColor" d="M8,256C8,393,119,504,256,504S504,393,504,256,393,8,256,8,8,119,8,256ZM256,440V72a184,184,0,0,1,0,368Z" transform="translate(-8 -8)"/></svg>
-  </button>
+  {{ block "content" . }}
 
-
- {{ block "content" . }}
   {{ end }}
-    <script>
-    var currentTheme = localStorage.getItem('theme'); 
-    if (currentTheme !== 'light' && currentTheme !== 'dark') {
-      currentTheme = 'dark';
-    }
-    document.documentElement.setAttribute('data-theme', currentTheme);
-    document.getElementById('dark-mode-toggle').addEventListener('click', function() {
-      var currentTheme = document.documentElement.getAttribute('data-theme');
-      if (currentTheme === 'dark') {
-        document.documentElement.setAttribute('data-theme', 'light');
-        localStorage.setItem('theme', 'light');
-      } else {
-        document.documentElement.setAttribute('data-theme', 'dark');
-        localStorage.setItem('theme', 'dark');
-      }
-    });
-    </script>
+
+    {{ template "theme-toggle-script"}}
     <script src="https://unpkg.com/htmx.org@1.9.6"></script>
     <script src="https://unpkg.com/htmx.org/dist/ext/response-targets.js"></script>
     <script src="https://unpkg.com/htmx.org/dist/ext/sse.js"></script>

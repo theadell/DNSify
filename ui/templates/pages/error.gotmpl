@@ -1,7 +1,12 @@
 {{ define "title"}}
   DNSify | 404 - Not Found 
 {{ end }}
+
+
 {{ define "content" }}
+
+{{ template "error-page-actions"}}
+
   <div class="error-container">
     <div class="text-container">
       <h1> to, err := human() </h1>
@@ -9,7 +14,7 @@
       <p>Try <a href="/">going back to the homepage</a>.</p>
     </div>
     <div class="image-container">
-      <img src="/static/img/hypnotized-gopher.jpg" class="error-gopher">
+      <img src="/static/img/hypnotized-gopher.png" class="error-gopher">
     </div>
   </div>
 {{ end }}

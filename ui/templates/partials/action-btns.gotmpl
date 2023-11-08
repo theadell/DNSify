@@ -1,0 +1,108 @@
+{{ define "settings-btn" }}
+  <a href="/dashboard/apikeys" class="floating__action">
+      <i class="material-symbols-outlined">settings</i>
+      <span class="floating__tooltip">Settings</span>
+  </a>
+{{ end }}
+
+{{ define "theme-toggle-btn" }}
+  <button id="floating-btn-toggle"  class="floating__action floating__action-settings">
+      <i class="material-symbols-outlined">dark_mode</i>
+      <span class="floating__tooltip" id="theme-tooltip">Switch to Light Mode</span>
+  </button>
+{{ end }}
+{{ define "logout-btn" }}
+
+<form action="/logout" method="post">
+  <button type="submit"  class="floating__action floating__action-settings">
+      <i class="material-symbols-outlined">logout</i>
+      <span class="floating__tooltip">Logout</span>
+  </button>
+</form>
+{{ end }}
+
+{{ define "back-btn" }}
+  <a href="javascript:history.back()" class="floating__action">
+      <i class="material-symbols-outlined">arrow_back</i>
+      <span class="floating__tooltip">Navigate Back</span>
+  </a>
+{{ end }}
+
+{{ define "home-btn" }}
+  <a href="/" class="floating__action">
+      <i class="material-symbols-outlined">home</i>
+      <span class="floating__tooltip">Navigate To Home</span>
+  </a>
+{{ end }}
+
+{{ define "main-page-actions" }}
+<div class="floating__actions-container ">
+  {{ template "theme-toggle-btn"}}
+  {{ template "logout-btn"}}
+  {{ template "settings-btn"}}
+</div>
+{{ end }}
+
+{{ define "auxiliary-page-actions" }}
+<div class="floating__actions-container ">
+  {{ template "theme-toggle-btn"  }}
+  {{ template "logout-btn"  }}
+  {{ template "home-btn"  }}
+  {{ template "settings-btn"  }}
+  {{ template "back-btn"  }}
+</div>
+{{ end }}
+
+{{ define "error-page-actions" }}
+<div class="floating__actions-container ">
+  {{ template "theme-toggle-btn"  }}
+  {{ template "home-btn"  }}
+  {{ template "back-btn"  }}
+</div>
+{{ end }}
+
+
+{{ define "theme-toggle" }}
+<div class="floating__actions-container ">
+  {{ template "theme-toggle-btn"}}
+</div>
+{{ end }}
+
+{{ define "theme-toggle-script"}}
+
+  <script>
+      var currentTheme = localStorage.getItem('theme'); 
+      if (currentTheme !== 'light' && currentTheme !== 'dark') {
+        currentTheme = 'dark';
+      }
+      document.documentElement.setAttribute('data-theme', currentTheme);
+
+      var themeToggleButton = document.getElementById('floating-btn-toggle');
+      var themeIcon = themeToggleButton.querySelector('.material-symbols-outlined');
+      var themeTooltip = document.getElementById('theme-tooltip');
+
+      if (currentTheme === 'dark') {
+          themeIcon.textContent = 'light_mode'; 
+          themeTooltip.textContent = 'Switch to Light Mode';
+      } else {
+          themeIcon.textContent = 'dark_mode'; 
+          themeTooltip.textContent = 'Switch to Dark Mode';
+      }
+
+      themeToggleButton.addEventListener('click', function() {
+        var currentTheme = document.documentElement.getAttribute('data-theme');
+        if (currentTheme === 'dark') {
+          document.documentElement.setAttribute('data-theme', 'light');
+          localStorage.setItem('theme', 'light');
+          themeIcon.textContent = 'dark_mode'; 
+          themeTooltip.textContent = 'Switch to Dark Mode'; 
+        } else {
+          document.documentElement.setAttribute('data-theme', 'dark');
+          localStorage.setItem('theme', 'dark');
+          themeIcon.textContent = 'light_mode';
+          themeTooltip.textContent = 'Switch to Light Mode'; 
+        }
+      });
+  </script>
+
+{{ end }}

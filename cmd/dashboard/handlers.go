@@ -138,7 +138,15 @@ func (app *App) AddRecordHandler(w http.ResponseWriter, r *http.Request) {
 
 	// update existing record
 	if dr := app.dnsClient.GetRecordByFQDNAndType(record.FQDN, record.Type); dr != nil {
-		if app.dnsClient.RemoveRecord(*dr) != nil {
+		if err := app.dnsClient.RemoveRecord(*dr); err != nil {
+			if err == dnsservice.ErrImmutableRecord {
+				app.clientError(w, http.StatusBadRequest, "This record is read only")
+				return
+			} else if err == dnsservice.ErrNotAuthorized {
+				app.clientError(w, http.StatusUnauthorized, "You do not have the required permissions to perform this action.")
+				return
+			}
+
 			app.serverError(w, err)
 			return
 		}
@@ -172,6 +180,7 @@ func (app *App) AddRecordHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = app.dnsClient.AddRecord(record)
+	fmt.Println("some error happened", err)
 	if err != nil {
 		if err == dnsservice.ErrImmutableRecord {
 			app.clientError(w, http.StatusBadRequest, "This record is read only")
@@ -180,6 +189,7 @@ func (app *App) AddRecordHandler(w http.ResponseWriter, r *http.Request) {
 			app.clientError(w, http.StatusUnauthorized, "You do not have the required permissions to perform this action.")
 			return
 		}
+		fmt.Println("Will give a server error here")
 		app.serverError(w, err)
 		return
 	}

@@ -1,23 +1,82 @@
-.floating__action {
-  position: absolute;
+.floating__actions-container {
+  position: fixed;
   z-index: 100;
-  top: 1em;
-  color: var(--foreground);
-  border: 2px solid currentColor;
-  width: 30px;
-  height: 30px;
-  border-radius: 5px;
-  padding: 4px;
-  background: transparent;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+/* .floating__actions-container--left { */
+/*   left: 1em; */
+/* } */
+/**/
+/* .floating__actions-container--right { */
+/*   right: 1em; */
+/* } */
+
+.floating__action {
+  position: relative;
+  background-color: var(--floating-action-bg-color);
+  color: var(--floating-action-icon-color);
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  padding: 0;
   cursor: pointer;
-}
-.floating__action-toggle {
-  right: 1em;
-}
-.floating__action-settings {
-  right: 3.5em;
-  text-align: center;
   display: flex;
   align-items: center;
   justify-content: center;
+  text-decoration: none;
+  box-shadow: 0 2px 4px var(--shadow-color);
+  transition:
+    background-color 0.3s,
+    transform 0.3s;
+}
+.floating__action:hover,
+.floating__action:focus {
+  text-decoration: none;
+}
+.floating__action:hover {
+  background-color: var(--special-color);
+  color: var(--special-text-color);
+  opacity: 1;
+  transform: translateY(-2px);
+}
+.floating__action a {
+  text-decoration: none;
+  color: inherit;
+}
+.floating__action:hover a {
+  text-decoration: none;
+}
+.floating__action .material-symbols-outlined {
+  font-size: 24px;
+}
+
+.floating__tooltip {
+  visibility: hidden;
+  background-color: var(--special-bg-color);
+  color: var(--special-text-color);
+  text-align: center;
+  border-radius: 4px;
+  padding: 3px 6px;
+  position: absolute;
+  z-index: 1;
+  right: 100%;
+  margin-right: 6px;
+  opacity: 0;
+  transition:
+    opacity 0.3s,
+    visibility 0.3s;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.floating__action:hover .floating__tooltip {
+  visibility: visible;
+  opacity: 1;
 }

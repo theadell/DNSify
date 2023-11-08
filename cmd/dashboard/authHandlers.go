@@ -109,3 +109,13 @@ func (app *App) handleOAuthCallback(w http.ResponseWriter, r *http.Request) {
 	app.sessionManager.Put(r.Context(), "email", claims.Email)
 	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 }
+
+func (app *App) logoutHandler(w http.ResponseWriter, r *http.Request) {
+	err := app.sessionManager.Destroy(r.Context())
+	if err != nil {
+		slog.Error("Failed to destroy user session", "error", err.Error())
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}

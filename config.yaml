@@ -15,9 +15,6 @@ dns:
         - "*/ns2"
         - "*/ns3"
         - NS/@ # NS Records for the zone
-      admin_only:
-        - A/@
-        - AAAA/@
         - A/www
         - AAAA/www
 

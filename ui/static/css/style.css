@@ -103,6 +103,10 @@ select {
   --disabled-text-color: rgb(150, 150, 150);
 
   --danger-color: rgb(221, 44, 0);
+
+  --floating-action-bg-color: rgba(205, 88, 117, 0.7);
+  --floating-action-icon-color: rgba(255, 255, 255, 0.9);
+
   /* Spacing System */
   --space-3xs: clamp(0.25rem, 0.1964rem + 0.1429vw, 0.3125rem);
   --space-2xs: clamp(0.5rem, 0.3929rem + 0.2857vw, 0.625rem);
@@ -138,6 +142,8 @@ select {
   --disabled-text-color: rgb(100, 100, 100);
 
   --danger-color: rgb(255, 69, 58);
+  --floating-action-bg-color: rgba(147, 77, 93, 0.7);
+  --floating-action-icon-color: rgba(226, 222, 223, 0.9);
 }
 
 /* General Styles */

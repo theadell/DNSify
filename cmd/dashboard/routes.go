@@ -30,6 +30,8 @@ func (app *App) Routes() http.Handler {
 	r.Group(func(r chi.Router) {
 		r.Use(app.RequireAuthentication)
 
+		r.Post("/logout", app.logoutHandler)
+
 		r.HandleFunc("/status", app.StatusSSEHandler)
 		r.Route("/dashboard", func(r chi.Router) {
 			r.Get("/", app.DashboardHandler)
