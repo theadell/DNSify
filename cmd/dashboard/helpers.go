@@ -81,8 +81,10 @@ func validateRecordReq(hostname, ip, ttl, recordType string) error {
 	if !isValidHostname(hostname) {
 		return errors.New("Invalid hostname")
 	}
-	if recordType == "A" && !isValidIPv4(ip) || recordType == "AAAA" && !isValidIPv6(ip) {
-		return errors.New("Invalid IP address")
+	if ip != "@" {
+		if recordType == "A" && !isValidIPv4(ip) || recordType == "AAAA" && !isValidIPv6(ip) {
+			return errors.New("Invalid IP address")
+		}
 	}
 	if !isValidTTL(ttl) {
 		return errors.New("Invalid ttl")

@@ -1,8 +1,6 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"slices"
@@ -21,7 +19,11 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 	records = slices.DeleteFunc(records, func(r dnsservice.Record) bool {
 		return r.Type != "A"
 	})
-	app.render(w, http.StatusOK, "dashboard", records)
+	data := DashboardPageData{
+		Zone:    app.dnsClient.GetZone(),
+		Records: records,
+	}
+	app.render(w, http.StatusOK, "dashboard", data)
 }
 func (app *App) SettingsHandler(w http.ResponseWriter, r *http.Request) {
 	user := app.sessionManager.GetString(r.Context(), "email")
@@ -114,10 +116,6 @@ func (app *App) AddRecordHandler(w http.ResponseWriter, r *http.Request) {
 
 	hostname, ip, ttl, recordType := r.FormValue("hostname"), r.FormValue("ip"), r.FormValue("ttl"), r.FormValue("type")
 
-	if ip == "@" {
-		ip = "157.230.106.145"
-	}
-
 	if err := validateRecordReq(hostname, ip, ttl, recordType); err != nil {
 		slog.Error("Invalid record request", "error", err)
 		app.clientError(w, http.StatusBadRequest, err.Error())
@@ -130,57 +128,13 @@ func (app *App) AddRecordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	record := dnsservice.NewRecord(recordType, fmt.Sprintf("%s.%s.", hostname, "rusty-leipzig.com"), ip, ttlNum)
+	record := dnsservice.NewRecordFromHost(recordType, hostname, ip, ttlNum, app.dnsClient.GetZone(), app.dnsClient.GetIPv4(), app.dnsClient.GetIPv6())
 	if app.dnsClient.GetRecordByHash(record.Hash) != nil {
 		app.clientError(w, http.StatusBadRequest, "Duplication Error", "Record Already Exists")
 		return
 	}
 
-	// update existing record
-	if dr := app.dnsClient.GetRecordByFQDNAndType(record.FQDN, record.Type); dr != nil {
-		if err := app.dnsClient.RemoveRecord(*dr); err != nil {
-			if err == dnsservice.ErrImmutableRecord {
-				app.clientError(w, http.StatusBadRequest, "This record is read only")
-				return
-			} else if err == dnsservice.ErrNotAuthorized {
-				app.clientError(w, http.StatusUnauthorized, "You do not have the required permissions to perform this action.")
-				return
-			}
-
-			app.serverError(w, err)
-			return
-		}
-
-		slog.Info("Successfully deleted DNS record.", "record", record)
-		err = app.dnsClient.AddRecord(record)
-		if err != nil {
-			if err == dnsservice.ErrImmutableRecord {
-				app.clientError(w, http.StatusBadRequest, "This record is read only")
-				return
-			} else if err == dnsservice.ErrNotAuthorized {
-				app.clientError(w, http.StatusUnauthorized, "You do not have the required permissions to perform this action.")
-				return
-			}
-			app.serverError(w, err)
-			return
-		}
-
-		slog.Info("Successfully added a new DNS record.", "record", record)
-		payload := HTMXDeleteDuplicateRowEvent{}
-		payload.DeleteDuplicateRow.Hash = dr.Hash
-		jsonHeader, err := json.Marshal(payload)
-		if err != nil {
-			app.serverError(w, err)
-			return
-		}
-		// instruct htmx to remove the old record
-		w.Header().Set("HX-Trigger", string(jsonHeader))
-		app.renderTemplateFragment(w, http.StatusOK, "dashboard", "record-row", record)
-		return
-	}
-
 	err = app.dnsClient.AddRecord(record)
-	fmt.Println("some error happened", err)
 	if err != nil {
 		if err == dnsservice.ErrImmutableRecord {
 			app.clientError(w, http.StatusBadRequest, "This record is read only")
@@ -189,12 +143,9 @@ func (app *App) AddRecordHandler(w http.ResponseWriter, r *http.Request) {
 			app.clientError(w, http.StatusUnauthorized, "You do not have the required permissions to perform this action.")
 			return
 		}
-		fmt.Println("Will give a server error here")
 		app.serverError(w, err)
 		return
 	}
-
-	slog.Info("Successfully added a new DNS record.", "record", record)
 	app.renderTemplateFragment(w, http.StatusOK, "dashboard", "record-row", &record)
 }
 
@@ -239,7 +190,6 @@ func (app *App) DeleteRecordHandler(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 		return
 	}
-	slog.Info("Successfully deleted a dns record.", "record", record)
 	w.WriteHeader(http.StatusOK)
 }
 

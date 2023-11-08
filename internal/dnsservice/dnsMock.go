@@ -29,6 +29,16 @@ func NewMockClientWithTestRecords() *MockClient {
 	m.AddRecord(NewRecord("AAAA", "bar.rusty-leipzig.com.", "::1", 100))
 	return m
 }
+func (m *MockClient) GetZone() string {
+	return "mock.example.com."
+}
+
+func (m *MockClient) GetIPv4() string {
+	return "172.0.0.1"
+}
+func (m *MockClient) GetIPv6() string {
+	return "::1"
+}
 
 func (m *MockClient) GetRecords() []Record {
 	m.mutex.RLock()

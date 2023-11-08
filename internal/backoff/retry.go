@@ -3,6 +3,7 @@ package backoff
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"math"
 	"math/rand"
 	"time"
@@ -51,14 +52,12 @@ func RetryWithBackoff(op func() error, config RetryConfig) error {
 		// Calculate the next delay with jitter
 		jitter := time.Duration(rand.Float64() * config.JitterFactor * float64(delay))
 		nextDelay := delay + jitter
-
-		fmt.Printf("Attempt %d failed; retrying in %v...\n", i+1, nextDelay)
-
+		slog.Info(fmt.Sprintf("Attempt %d failed; retrying in %v...\n", i+1, nextDelay))
 		time.Sleep(nextDelay)
 
 		// Double the delay for the next iteration, but don't exceed MaxDelay
 		delay = time.Duration(math.Min(float64(2*delay), float64(config.MaxDelay)))
 	}
 
-	return fmt.Errorf("operation failed after %d retries", config.MaxRetries)
+	return ErrMaxRetriesReached
 }

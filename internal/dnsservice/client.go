@@ -20,6 +20,9 @@ type Service interface {
 	GetRecordByHash(string) *Record
 	GetRecordForFQDN(string, string) *Record
 	GetRecordByFQDNAndType(string, string) *Record
+	GetZone() string
+	GetIPv4() string
+	GetIPv6() string
 	Close()
 }
 
@@ -29,6 +32,8 @@ type Client struct {
 	mutex               sync.RWMutex
 	client              *dns.Client
 	zone                string
+	ipv4                string
+	ipv6                string
 	serverAddr          string
 	tsigKey             string
 	SyncInterval        int
@@ -55,6 +60,8 @@ func NewClient(config DNSConfig) (*Client, error) {
 		guards:     parseGuards(config.Guards, config.Zone),
 		client:     new(dns.Client),
 		zone:       config.Zone,
+		ipv4:       config.Ipv4,
+		ipv6:       config.Ipv6,
 		serverAddr: config.Addr,
 		tsigKey:    config.TsigKey,
 		done:       make(chan bool),
@@ -73,6 +80,18 @@ func NewClient(config DNSConfig) (*Client, error) {
 	go client.periodicHealthCheck(time.Duration(config.HealthCheckInterval) * time.Second)
 	go client.periodicSyncRecords(time.Duration(config.SyncInterval) * time.Second)
 	return client, nil
+}
+
+func (c *Client) GetZone() string {
+	return c.zone
+}
+
+func (c *Client) GetIPv4() string {
+	return c.ipv4
+}
+
+func (c *Client) GetIPv6() string {
+	return c.ipv6
 }
 
 func (c *Client) HealthCheck() HealthState {

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/miekg/dns"
+	"github.com/theadell/dnsify/internal/backoff"
 )
 
 var (
@@ -28,6 +29,10 @@ type Record struct {
 	Hash string
 }
 
+func (r Record) String() string {
+	return fmt.Sprintf("%s %d IN %s %s", r.FQDN, r.TTL, r.Type, r.IP)
+}
+
 func NewRecord(typ, fqdn, ip string, ttl uint) Record {
 	r := Record{
 		Type: typ,
@@ -37,6 +42,16 @@ func NewRecord(typ, fqdn, ip string, ttl uint) Record {
 	}
 	r.Hash = hashRecord(r)
 	return r
+}
+func NewRecordFromHost(typ, hostname, ip string, ttl uint, zone, ipv4, ipv6 string) Record {
+	if ip == "@" {
+		if typ == "A" {
+			ip = ipv4
+		} else if typ == "AAAA" {
+			ip = ipv6
+		}
+	}
+	return NewRecord(typ, toFQDN(hostname, zone), ip, ttl)
 }
 
 func (c *Client) GetRecords() []Record {
@@ -100,10 +115,24 @@ func (c *Client) AddRecord(record Record) error {
 		return ErrImmutableRecord
 	}
 
+	retryConfig := backoff.DefaultRetryConfig
+	retryConfig.MaxRetries = 2
+
+	if c.exists(record) {
+		slog.Debug("Record already exists, will attempt to override it by deleting it and then creating it again", "record", record)
+		removeRecordOp := func() error {
+			return c.RemoveRecord(record)
+		}
+		err := backoff.RetryWithBackoff(removeRecordOp, retryConfig)
+		if err != nil {
+			return ErrRecordDeletion
+		}
+	}
+
 	msg := new(dns.Msg)
 	msg.SetUpdate(c.zone)
 
-	resourceRecord, err := dns.NewRR(fmt.Sprintf("%s %s %s", record.FQDN, record.Type, record.IP))
+	resourceRecord, err := dns.NewRR(fmt.Sprintf("%s %d %s %s", record.FQDN, record.TTL, record.Type, record.IP))
 	if err != nil {
 		slog.Error("Failed to create new resource record", "error", err)
 		return fmt.Errorf("%w: %v", ErrRecordCreation, err)
@@ -141,7 +170,7 @@ func (c *Client) RemoveRecord(record Record) error {
 	msg := new(dns.Msg)
 	msg.SetUpdate(c.zone)
 
-	resourceRecord, err := dns.NewRR(fmt.Sprintf("%s %s %s", record.FQDN, record.Type, record.IP))
+	resourceRecord, err := dns.NewRR(fmt.Sprintf("%s %d %s %s", record.FQDN, record.TTL, record.Type, record.IP))
 	if err != nil {
 		return fmt.Errorf("failed to create Resource Record: %w", err)
 	}
@@ -167,6 +196,7 @@ func (c *Client) RemoveRecord(record Record) error {
 		}
 	}
 
+	slog.Info("Record removed successfully", "record", record)
 	return nil
 }
 func hashRecord(record Record) string {
@@ -193,6 +223,13 @@ func (c *Client) isAdminEditable(t, fqdn string) bool {
 	}
 	wildcardGuard := NewRecordGuard("*", fqdn)
 	if _, ok := c.guards.AdminOnly[wildcardGuard]; ok {
+		return true
+	}
+	return false
+}
+
+func (c *Client) exists(r Record) bool {
+	if c.GetRecordByFQDNAndType(r.FQDN, r.Type) != nil {
 		return true
 	}
 	return false

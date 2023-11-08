@@ -23,6 +23,8 @@ type ServerConfig struct {
 type ClientConfig struct {
 	SyncInterval        int
 	HealthCheckInterval int
+	Ipv4                string
+	Ipv6                string
 	Guards              RecordGuards
 }
 
@@ -41,6 +43,20 @@ func validateConfig(config *DNSConfig) error {
 	}
 	if config.HealthCheckInterval <= 0 {
 		config.HealthCheckInterval = 60
+	}
+	if config.Ipv4 == "" {
+		config.Ipv4 = "172.0.0.1"
+	} else {
+		if net.ParseIP(config.Ipv4) == nil {
+			return fmt.Errorf("%s is not a valid IPv4 Address", config.Ipv4)
+		}
+	}
+	if config.Ipv6 == "" {
+		config.Ipv6 = "::1"
+	} else {
+		if net.ParseIP(config.Ipv6) == nil {
+			return fmt.Errorf("%s is not a valid IPv6 Address", config.Ipv6)
+		}
 	}
 	return nil
 }

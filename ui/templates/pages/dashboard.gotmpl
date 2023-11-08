@@ -36,7 +36,7 @@ DNSify | Dashboard
 {{ template "main-page-actions"}}
 
 <div class="container" >
-  <h2 class="heading">rusty-leipzig.com</h2>
+  <h2 class="heading"> {{ .Zone }}</h2>
 
   <!-- Server Status Info Bar  -->
   <div class="info-bar-sse-wrapper" hx-ext="sse" sse-connect="/status" sse-swap="message">
@@ -182,7 +182,7 @@ DNSify | Dashboard
       </tr>
     </thead>
     <tbody>
-      {{range .}}
+      {{range .Records}}
         {{ template "record-row" . }}
       {{end}}
     </tbody>

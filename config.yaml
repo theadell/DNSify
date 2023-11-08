@@ -1,20 +1,24 @@
 dns:
   server:
-    addr: "ns1.rusty-leipzig.com:53"
-    zone: "rusty-leipzig.com."
-    tsigKey: "tsig-key."
-    tsigSecret: "tsig-secret"
+    addr: "ns1.rusty-leipzig.com:53" # Adress of the DNS server with port. (host:port or ip:port)
+    zone: "rusty-leipzig.com." # The zone to be managed (fqdn)
+    tsigKey: "tsig-key." # the key part of the TSIG for the zone
+    tsigSecret: "tsig-secret" # The secret part of the TSIG for the zone
   client:
     syncInterval: 1800
     healthCheckInterval: 60
+    ipv4: "157.230.106.145" # the ipv4 for which "@" can be used as shorthand (default: 172.0.0.1)
+    ipv6: "::1" # the ipv6 for which "@" can be used as shorthand (default: ::1)
     guards:
-      immutable:
+      immutable: # Optional: make certain domains/subdomains immutable
         - A/dnsify # IPV4 Records for `dnsify.[zone]`
         - A/dns # IPV4 Records for `dns.[zone]`
         - "*/ns1" # All record types for `ns1.[zone]`
         - "*/ns2"
         - "*/ns3"
         - NS/@ # NS Records for the zone
+        - A/@
+        - AAAA/@
         - A/www
         - AAAA/www
 
