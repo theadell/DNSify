@@ -30,6 +30,7 @@ func NewMockIdp(config *OAuth2ClientConfig, sessionManager *scs.SessionManager) 
 		Config:         oauthConfig,
 		provider:       "mock",
 		sessionManager: sessionManager,
+		LoginPageData:  loginPageData{Provider: "default", Text: "Sign in with your DNSify account"},
 	}
 	return idp
 }

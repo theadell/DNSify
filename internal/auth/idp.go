@@ -8,12 +8,18 @@ import (
 	"golang.org/x/oauth2/endpoints"
 )
 
+type loginPageData struct {
+	Text     string
+	Provider string
+}
+
 type Idp struct {
 	oauth2.Config
 	provider       string
 	restrictAccess bool
 	whiteList      []string
 	sessionManager *scs.SessionManager
+	LoginPageData  loginPageData
 }
 
 type OAuth2ClientConfig struct {
@@ -27,14 +33,17 @@ type OAuth2ClientConfig struct {
 	AuthorizedDomains []string `mapstructure:"authorizedDomains"`
 	Tenant            string
 	Domain            string
+	LoginText         string
 }
 
 func NewIdp(config *OAuth2ClientConfig, sessionManager *scs.SessionManager) *Idp {
 
 	endpoint := oauth2.Endpoint{}
+	provider := strings.ToLower(config.Provider)
+	text := "Sign in with " + provider
+	lpd := loginPageData{Text: text, Provider: provider}
 
-	provder := strings.ToLower(config.Provider)
-	switch provder {
+	switch provider {
 	case "google":
 		endpoint = endpoints.Google
 	case "facebook":
@@ -56,6 +65,8 @@ func NewIdp(config *OAuth2ClientConfig, sessionManager *scs.SessionManager) *Idp
 	default:
 		endpoint.AuthURL = config.AuthURL
 		endpoint.TokenURL = config.AuthURL
+		text = "Sign in with your DNSify account"
+		lpd.Provider = "default"
 	}
 
 	if config.Scopes == nil {
@@ -69,12 +80,16 @@ func NewIdp(config *OAuth2ClientConfig, sessionManager *scs.SessionManager) *Idp
 		Endpoint:     endpoint,
 		Scopes:       config.Scopes,
 	}
-
+	if config.LoginText != "" {
+		text = config.LoginText
+	}
+	lpd.Text = text
 	idp := &Idp{
 		Config:         oauthConfig,
-		provider:       provder,
+		provider:       provider,
 		whiteList:      config.AuthorizedDomains,
 		sessionManager: sessionManager,
+		LoginPageData:  lpd,
 	}
 	if config.AuthorizedDomains != nil {
 		idp.restrictAccess = true

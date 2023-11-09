@@ -12,7 +12,7 @@ import (
 )
 
 func (app *App) IndexHandler(w http.ResponseWriter, r *http.Request) {
-	app.render(w, http.StatusOK, "index", nil)
+	app.render(w, http.StatusOK, "index", app.idp.LoginPageData)
 }
 func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 	records := app.dnsClient.GetRecords()

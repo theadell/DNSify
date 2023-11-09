@@ -22,17 +22,11 @@
             <p>Log in to access the DNS Management Dashboard.</p>
             <div class="login-card__option">
                 <a href="/login" class="login-card__link">
-                    <img class="login-card__icon" src="/static/img/login.png" alt="Company login">
-                    <span>Login with your DNSify account</span>
+                    <img src="/static/img/social/{{.Provider}}-logo-l.png" alt="{{.Provider}} Logo" class="login-card__logo login-card__logo--light" onerror="this.src='/static/img/social/default-logo-l.png';this.onerror='';">
+                    <img src="/static/img/social/{{.Provider}}-logo-d.png" alt="{{.Provider}} Logo" class="login-card__logo login-card__logo--dark" onerror="this.src='/static/img/social/default-logo-d.png';this.onerror='';">
+                    <span> {{or .Text "Sign in with your DNSify account" }} </span>
                 </a>
             </div>
-            <!-- <div class="login-card__option"> -->
-            <!--     <a href="/google-login" class="login-card__link"> -->
-            <!--         <img src="/static/img/google-logo-light.svg" alt="Google Logo" class="login-google__logo login-google__logo--light"> -->
-            <!--         <img src="/static/img/google-logo-dark.svg" alt="Google Logo" class="login-google__logo login-google__logo--dark"> -->
-            <!--         <span>Login with Google Workspace</span> -->
-            <!--     </a> -->
-            <!-- </div> -->
             <a class="login-card__help" href="mailto:ahabib@itemis.com?subject=Login%20Issue%20%7C%20DNS%20Management%20Dashboard">Need assistance? Contact us.</a>
         </div>
     </div>

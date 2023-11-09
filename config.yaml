@@ -28,7 +28,7 @@ httpServer:
   secureCookie: false
 
 oauth2Client:
-  provider: "google" # Use a well-known provider (e.g., google, AWS Cognite etc) or specify 'authURL' and 'tokenURL' for custom or self-hosten IDP/IAM.
+  provider: "facebook" # Use a well-known provider (e.g., google, AWS Cognite etc) or specify 'authURL' and 'tokenURL' for custom or self-hosten IDP/IAM.
   # authURL: "https://example.com/auth" # Auth endpoint for custom providers.
   # tokenURL: "https://example.com/token" # Token endpoint for custom providers.
   clientID: "CLIENT_ID" # Set your OAuth2 client ID.
@@ -38,3 +38,4 @@ oauth2Client:
   # tenant: "tenant_id" # Required for azuread provider.
   # domain: "domain_name" # Required for awscognito provider.
   # authorizedDomains: [ "my-company.com", "my-company.de"] # (optional) restrict access by white listing domains.
+  # loginText: "Continue with your awesome-org.com account" # defaults value: Sign in with {provider}

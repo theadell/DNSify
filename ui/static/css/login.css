@@ -83,20 +83,20 @@ p {
 .login-card__help:hover {
   color: var(--dark-color);
 }
-.login-google__logo {
+.login-card__logo {
   width: 30px;
   margin-right: var(--space-xs);
   display: none;
 }
 
-.login-google__logo--light {
+.login-card__logo--light {
   display: block;
 }
 
-[data-theme="dark"] .login-google__logo--light {
+[data-theme="dark"] .login-card__logo--light {
   display: none;
 }
 
-[data-theme="dark"] .login-google__logo--dark {
+[data-theme="dark"] .login-card__logo--dark {
   display: block;
 }
