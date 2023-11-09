@@ -1,4 +1,4 @@
-package mock
+package auth
 
 import (
 	"crypto/hmac"
@@ -9,7 +9,30 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/alexedwards/scs/v2"
+	"golang.org/x/oauth2"
 )
+
+func NewMockIdp(config *OAuth2ClientConfig, sessionManager *scs.SessionManager) *Idp {
+	go MockOAuth2Server().ListenAndServe()
+	oauthConfig := oauth2.Config{
+		ClientID:     config.ClientID,
+		ClientSecret: config.ClientSecret,
+		RedirectURL:  config.RedirectURL,
+		Scopes:       []string{"openid"},
+		Endpoint: oauth2.Endpoint{
+			AuthURL:  "http://localhost:9999/auth",
+			TokenURL: "http://localhost:9999/token",
+		},
+	}
+	idp := &Idp{
+		Config:         oauthConfig,
+		provider:       "mock",
+		sessionManager: sessionManager,
+	}
+	return idp
+}
 
 func base64UrlEncode(data []byte) string {
 	encoded := base64.StdEncoding.EncodeToString(data)

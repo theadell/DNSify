@@ -20,17 +20,17 @@ func (app *App) Routes() http.Handler {
 
 	// public routes
 	r.Group(func(r chi.Router) {
-		r.Use(app.redirectIfLoggedIn)
+		r.Use(app.idp.RedirectIfLoggedIn)
 		r.Get("/", app.IndexHandler)
-		r.Get("/login", app.initiateOAuthProcess)
-		r.Get("/oauth/callback", app.handleOAuthCallback)
+		r.Get("/login", app.idp.RequestSignIn)
+		r.Get("/oauth/callback", app.idp.HandleSignInCallback)
 	})
 
 	// protected routes
 	r.Group(func(r chi.Router) {
-		r.Use(app.RequireAuthentication)
+		r.Use(app.idp.RequireAuthentication)
 
-		r.Post("/logout", app.logoutHandler)
+		r.Post("/logout", app.idp.LogoutHandler)
 
 		r.HandleFunc("/status", app.StatusSSEHandler)
 		r.Route("/dashboard", func(r chi.Router) {

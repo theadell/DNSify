@@ -6,13 +6,14 @@ import (
 	"time"
 
 	"github.com/spf13/viper"
+	"github.com/theadell/dnsify/internal/auth"
 	"github.com/theadell/dnsify/internal/dnsservice"
 )
 
 type Config struct {
-	DNSClientConfig    dnsservice.DNSConfig `mapstructure:"dns"`
-	HTTPServerConfig   HTTPServerConfig     `mapstructure:"httpServer"`
-	OAuth2ClientConfig OAuth2ClientConfig   `mapstructure:"oauth2Client"`
+	DNSClientConfig    dnsservice.DNSConfig    `mapstructure:"dns"`
+	HTTPServerConfig   HTTPServerConfig        `mapstructure:"httpServer"`
+	OAuth2ClientConfig auth.OAuth2ClientConfig `mapstructure:"oauth2Client"`
 }
 
 type HTTPServerConfig struct {
@@ -20,14 +21,6 @@ type HTTPServerConfig struct {
 	Port         uint   `mapstructure:"port"`
 	SecureCookie bool   `mapstructure:"secureCookie"`
 	pushInterval time.Duration
-}
-
-type OAuth2ClientConfig struct {
-	ClientID     string `mapstructure:"clientID"`
-	ClientSecret string `mapstructure:"clientSecret"`
-	RedirectURL  string `mapstructure:"redirectURL"`
-	AuthURL      string `mapstructure:"AuthURL"`
-	TokenURL     string `mapstructure:"TokenURL"`
 }
 
 func loadConfig() (*Config, error) {

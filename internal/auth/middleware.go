@@ -1,12 +1,10 @@
-package main
+package auth
 
-import (
-	"net/http"
-)
+import "net/http"
 
-func (app *App) RequireAuthentication(next http.Handler) http.Handler {
+func (idp *Idp) RequireAuthentication(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		isAuthenticated := app.sessionManager.GetBool(r.Context(), AuthenticatedKey)
+		isAuthenticated := idp.sessionManager.GetBool(r.Context(), authenticatedKey)
 		if !isAuthenticated {
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
@@ -15,9 +13,9 @@ func (app *App) RequireAuthentication(next http.Handler) http.Handler {
 	})
 }
 
-func (app *App) redirectIfLoggedIn(next http.Handler) http.Handler {
+func (idp *Idp) RedirectIfLoggedIn(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		isAuthenticated := app.sessionManager.GetBool(r.Context(), AuthenticatedKey)
+		isAuthenticated := idp.sessionManager.GetBool(r.Context(), authenticatedKey)
 		if isAuthenticated {
 			referer := "/dashboard"
 			http.Redirect(w, r, referer, http.StatusSeeOther)

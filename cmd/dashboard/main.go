@@ -12,16 +12,15 @@ import (
 
 	"github.com/alexedwards/scs/v2"
 	"github.com/theadell/dnsify/internal/apikeymanager"
+	"github.com/theadell/dnsify/internal/auth"
 	"github.com/theadell/dnsify/internal/dnsservice"
-	"github.com/theadell/dnsify/internal/mock"
 	"github.com/theadell/dnsify/ui"
-	"golang.org/x/oauth2"
 )
 
 type App struct {
 	config         HTTPServerConfig
 	sessionManager *scs.SessionManager
-	oauthClient    *oauth2.Config
+	idp            *auth.Idp
 	keyManager     apikeymanager.APIKeyManager
 	templateCache  map[string]*template.Template
 	dnsClient      dnsservice.Service
@@ -34,13 +33,14 @@ func main() {
 		log.Fatalf("Error loading config: %v", err)
 	}
 
+	sessionManager := NewSessionManager(cfg.HTTPServerConfig.SecureCookie)
 	// toggle flags
 	var useMockDNS, useMockOAuth bool
 	flag.BoolVar(&useMockDNS, "mockdns", false, "Use mock DNS client")
 	flag.BoolVar(&useMockOAuth, "mockoauth", false, "Use mock OAuth2 server")
 	flag.Parse()
 
-	oauth2Client := setupOAuthClient(cfg, useMockOAuth)
+	oauth2Client := SetupIdp(cfg, sessionManager, useMockOAuth)
 
 	bindClient, err := setupDNSClient(cfg, useMockDNS)
 	if err != nil {
@@ -50,11 +50,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error setting up api keys manager: %v", err)
 	}
-	sessionManager := NewSessionManager(cfg.HTTPServerConfig.SecureCookie)
 	app := &App{
 		config:         cfg.HTTPServerConfig,
 		sessionManager: sessionManager,
-		oauthClient:    oauth2Client,
+		idp:            oauth2Client,
 		keyManager:     apikeymanager,
 		dnsClient:      bindClient,
 		templateCache:  loadTemplates(ui.TemplatesFS),
@@ -68,32 +67,12 @@ func main() {
 	slog.Info("Application has stopped")
 }
 
-func setupOAuthClient(cfg *Config, useMockOAuth bool) *oauth2.Config {
+func SetupIdp(cfg *Config, sessionManager *scs.SessionManager, useMockOAuth bool) *auth.Idp {
 
 	if useMockOAuth {
-		go mock.MockOAuth2Server().ListenAndServe()
-		return &oauth2.Config{
-			ClientID:     cfg.OAuth2ClientConfig.ClientID,
-			ClientSecret: cfg.OAuth2ClientConfig.ClientSecret,
-			RedirectURL:  cfg.OAuth2ClientConfig.RedirectURL,
-			Scopes:       []string{"openid"},
-			Endpoint: oauth2.Endpoint{
-				AuthURL:  "http://localhost:9999/auth",
-				TokenURL: "http://localhost:9999/token",
-			},
-		}
+		return auth.NewMockIdp(&cfg.OAuth2ClientConfig, sessionManager)
 	}
-
-	return &oauth2.Config{
-		ClientID:     cfg.OAuth2ClientConfig.ClientID,
-		ClientSecret: cfg.OAuth2ClientConfig.ClientSecret,
-		RedirectURL:  cfg.OAuth2ClientConfig.RedirectURL,
-		Scopes:       []string{"openid"},
-		Endpoint: oauth2.Endpoint{
-			AuthURL:  cfg.OAuth2ClientConfig.AuthURL,
-			TokenURL: cfg.OAuth2ClientConfig.TokenURL,
-		},
-	}
+	return auth.NewIdp(&cfg.OAuth2ClientConfig, sessionManager)
 }
 
 func setupDNSClient(cfg *Config, useMockDNS bool) (dnsservice.Service, error) {

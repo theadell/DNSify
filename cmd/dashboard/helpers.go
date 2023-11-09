@@ -1,9 +1,6 @@
 package main
 
 import (
-	"crypto/rand"
-	"crypto/sha256"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -49,19 +46,6 @@ func isValidTTL(ttl string) bool {
 }
 func isValidType(recordType string) bool {
 	return recordType == "A" || recordType == "AAAA"
-}
-func GenerateSecureRandom(l uint8) (string, error) {
-	verifierBytes := make([]byte, l)
-	_, err := rand.Read(verifierBytes)
-	if err != nil {
-		return "", err
-	}
-	return base64.RawURLEncoding.EncodeToString(verifierBytes), nil
-}
-
-func GenerateCodeChallenge(verifier string) string {
-	hash := sha256.Sum256([]byte(verifier))
-	return base64.RawURLEncoding.EncodeToString(hash[:])
 }
 
 func stringToUint(s string) (uint, error) {
