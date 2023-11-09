@@ -28,7 +28,7 @@ httpServer:
   secureCookie: false
 
 oauth2Client:
-  provider: "facebook" # Use a well-known provider (e.g., google, AWS Cognite etc) or specify 'authURL' and 'tokenURL' for custom or self-hosten IDP/IAM.
+  provider: "google" # Use a well-known provider (e.g., google, AWS Cognite etc) or specify 'authURL' and 'tokenURL' for custom or self-hosten IDP/IAM.
   # authURL: "https://example.com/auth" # Auth endpoint for custom providers.
   # tokenURL: "https://example.com/token" # Token endpoint for custom providers.
   clientID: "CLIENT_ID" # Set your OAuth2 client ID.
