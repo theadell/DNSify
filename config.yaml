@@ -28,12 +28,13 @@ httpServer:
   secureCookie: false
 
 oauth2Client:
-  provider: "google" # Use a well-known provider (e.g., google, AWS Cognite etc) or specify 'authURL' and 'tokenURL' for custom.
+  provider: "google" # Use a well-known provider (e.g., google, AWS Cognite etc) or specify 'authURL' and 'tokenURL' for custom or self-hosten IDP/IAM.
   # authURL: "https://example.com/auth" # Auth endpoint for custom providers.
   # tokenURL: "https://example.com/token" # Token endpoint for custom providers.
-  clientID: "YOUR_CLIENT_ID" # Set your OAuth2 client ID.
-  clientSecret: "YOUR_CLIENT_SECRET" # Set your OAuth2 client secret.
+  clientID: "CLIENT_ID" # Set your OAuth2 client ID.
+  clientSecret: "CLIENT_SECRET" # Set your OAuth2 client secret.
   scopes: ["openid", "email"] # Defaults to ["openid"]. Include 'email' for domain-based access control.
-  redirectURL: "http://localhost:8080/oauth/callback" # Adjust the origin (domain and port) as per your app's deployment. The path '/oauth/callback' is fixed.  # authorizedDomains: ["some-org.com"] # Optional. Limits access to specified domains. Leave empty for no restriction.
+  redirectURL: "http://localhost:8080/oauth/callback" # Adjust the origin (domain and port) as per your app's deployment.
   # tenant: "tenant_id" # Required for azuread provider.
   # domain: "domain_name" # Required for awscognito provider.
+  # authorizedDomains: [ "my-company.com", "my-company.de"] # (optional) restrict access by white listing domains.

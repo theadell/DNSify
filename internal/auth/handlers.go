@@ -78,7 +78,14 @@ func (idp *Idp) HandleSignInCallback(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to decode ID Token"})
 		return
 	}
-	slog.Info("User logged in", emailKey, idToken.GetString(emailKey), "ip", r.RemoteAddr)
+	userEmail := idToken.GetString(emailKey)
+	if !idp.isUserAuthorized(userEmail) {
+		slog.Info("User login request rejected because their organization is not white listed", "user", userEmail, "white list", idp.whiteList)
+		w.WriteHeader(http.StatusForbidden)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Forbidden. You are not authorized to use this app"})
+		return
+	}
+	slog.Info("User logged in", emailKey, userEmail, "ip", r.RemoteAddr)
 	idp.sessionManager.Put(r.Context(), authenticatedKey, true)
 	idp.sessionManager.Put(r.Context(), emailKey, idToken.GetString(emailKey))
 	idp.sessionManager.Put(r.Context(), subjectKey, idToken.GetString(subjectKey))

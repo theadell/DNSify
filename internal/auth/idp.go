@@ -11,6 +11,7 @@ import (
 type Idp struct {
 	oauth2.Config
 	provider       string
+	restrictAccess bool
 	whiteList      []string
 	sessionManager *scs.SessionManager
 }
@@ -74,6 +75,9 @@ func NewIdp(config *OAuth2ClientConfig, sessionManager *scs.SessionManager) *Idp
 		provider:       provder,
 		whiteList:      config.AuthorizedDomains,
 		sessionManager: sessionManager,
+	}
+	if config.AuthorizedDomains != nil {
+		idp.restrictAccess = true
 	}
 
 	return idp
