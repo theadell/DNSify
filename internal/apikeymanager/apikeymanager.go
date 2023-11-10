@@ -4,8 +4,11 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
+	"errors"
 	"time"
 )
+
+var ErrInvalidApiKey = errors.New("invalid api key")
 
 type APIKey struct {
 	UserID    string    `json:"userId"`
@@ -18,6 +21,7 @@ type APIKeyManager interface {
 	CreateKey(ctx context.Context, userID, label string) (APIKey, error)
 	GetKeys(ctx context.Context, userID string) ([]APIKey, error)
 	DeleteKey(ctx context.Context, userID, label string) error
+	ValidateKey(ctx context.Context, key string) error
 }
 
 func generateSecureKey(length int) (string, error) {

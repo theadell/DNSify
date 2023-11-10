@@ -96,3 +96,22 @@ func (m *fileAPIKeyManager) DeleteKey(ctx context.Context, userID, label string)
 
 	return nil
 }
+
+func (m *fileAPIKeyManager) ValidateKey(ctx context.Context, key string) error {
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+		for _, apiKeys := range m.keys {
+			for _, apiKey := range apiKeys {
+				if apiKey.Key == key {
+					return nil
+				}
+			}
+		}
+	}
+	return ErrInvalidApiKey
+}

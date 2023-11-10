@@ -1,25 +1,29 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/theadell/dnsify/internal/auth"
 	"github.com/theadell/dnsify/ui"
 )
 
 func (app *App) Routes() http.Handler {
-	r := chi.NewRouter()
+	router := chi.NewRouter()
+	router.Use(middleware.RealIP)
+	router.Use(middleware.Recoverer)
 
-	r.Use(middleware.RealIP)
-	r.Use(middleware.Recoverer)
-	r.Use(app.sessionManager.LoadAndSave)
+	// HTML Server
+	htmlRouter := chi.NewRouter()
+	htmlRouter.Use(app.sessionManager.LoadAndSave)
 
 	fs := http.FileServer(http.FS(ui.StatifFS))
-	r.Handle("/static/*", fs)
+	htmlRouter.Handle("/static/*", fs)
 
 	// public routes
-	r.Group(func(r chi.Router) {
+	htmlRouter.Group(func(r chi.Router) {
 		r.Use(app.idp.RedirectIfLoggedIn)
 		r.Get("/", app.IndexHandler)
 		r.Get("/login", app.idp.RequestSignIn)
@@ -27,7 +31,7 @@ func (app *App) Routes() http.Handler {
 	})
 
 	// protected routes
-	r.Group(func(r chi.Router) {
+	htmlRouter.Group(func(r chi.Router) {
 		r.Use(app.idp.RequireAuthentication)
 
 		r.Post("/logout", app.idp.LogoutHandler)
@@ -49,7 +53,19 @@ func (app *App) Routes() http.Handler {
 		})
 	})
 
-	r.NotFound(app.notFoundHandler)
+	htmlRouter.NotFound(app.notFoundHandler)
 
-	return r
+	// JSON Api
+	apiRouter := chi.NewRouter()
+	apiRouter.Use(auth.APIKeyValidatorMiddleware(app.keyManager))
+	testHandler := func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("Handling the request")
+		w.WriteHeader(http.StatusOK)
+	}
+	apiRouter.Get("/", testHandler)
+
+	router.Mount("/", htmlRouter)
+	router.Mount("/api", apiRouter)
+
+	return router
 }
