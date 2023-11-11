@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"encoding/json"
+	"errors"
 	"log/slog"
 	"net/http"
 
@@ -13,76 +13,91 @@ const (
 	codeVerifierKey        string = "code_verifier"
 	codeChallengeKey       string = "code_challenge"
 	codeChallengeMethodKey string = "code_challenge_method"
+	codeChallengeMethod    string = "S256"
 	codeKey                string = "code"
 	idTokenKey             string = "id_token"
 	emailKey               string = "email"
 	nameKey                string = "name"
 	authenticatedKey       string = "authenticated"
 	subjectKey             string = "sub"
+	LoginErrKey            string = "loginError"
+	errAccessForTeamOnly          = "Oops! Looks like you're not part of the DNSify squad yet. Company team members can log in here."
+	genericLoginErrMsg            = "An error occurred during the login process. Please try again."
 )
+
+var (
+	errStateNotFound                = errors.New("Missing 'state' parameter in session during OAuth callback.")
+	errCodeVerifierNotFound         = errors.New("Missing 'code_verifier' in session during OAuth flow.")
+	errStateGenerationFailed        = errors.New("Error generating 'state' parameter for OAuth request.")
+	errCodeVerifierGenerationFailed = errors.New("Error generating 'code_verifier' for OAuth process.")
+)
+
+func (idp *Idp) handleLoginErr(w http.ResponseWriter, r *http.Request, clientMsg string, err error, fields ...slog.Attr) {
+	if err != nil {
+
+		errorFields := append([]slog.Attr{slog.String("error", err.Error())}, fields...)
+		slog.ErrorContext(r.Context(), "OAuth error", errorFields)
+	}
+	idp.sessionManager.Put(r.Context(), LoginErrKey, clientMsg)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
 
 func (idp *Idp) RequestSignIn(w http.ResponseWriter, r *http.Request) {
 
 	state, err := generateSecureRandom(32)
 	if err != nil {
-		http.Error(w, "Failed to generate state", http.StatusInternalServerError)
+		idp.handleLoginErr(w, r, genericLoginErrMsg, errors.Join(err, errStateGenerationFailed))
+		return
 	}
 	idp.sessionManager.Put(r.Context(), stateKey, state)
 	codeVerifier, err := generateSecureRandom(32)
 	if err != nil {
-		http.Error(w, "Failed to generate code verifier", http.StatusInternalServerError)
+		idp.handleLoginErr(w, r, genericLoginErrMsg, errors.Join(err, errCodeVerifierGenerationFailed))
 		return
 	}
 	idp.sessionManager.Put(r.Context(), codeVerifierKey, codeVerifier)
 	codeChallenge := generateCodeChallenge(codeVerifier)
-	url := idp.AuthCodeURL(state, oauth2.SetAuthURLParam(codeChallengeKey, codeChallenge), oauth2.SetAuthURLParam(codeChallengeMethodKey, "S256"))
+	url := idp.AuthCodeURL(state, oauth2.SetAuthURLParam(codeChallengeKey, codeChallenge), oauth2.SetAuthURLParam(codeChallengeMethodKey, codeChallengeMethod))
 	http.Redirect(w, r, url, http.StatusSeeOther)
 }
 
 func (idp *Idp) HandleSignInCallback(w http.ResponseWriter, r *http.Request) {
-	state := idp.sessionManager.GetString(r.Context(), stateKey)
+	state := idp.sessionManager.PopString(r.Context(), stateKey)
 	if state == "" {
-		http.Error(w, "No state found in session", http.StatusBadRequest)
+		idp.handleLoginErr(w, r, genericLoginErrMsg, errStateNotFound)
 		return
 	}
 
 	queryState := r.URL.Query().Get(stateKey)
 
 	if state != queryState {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "invalid session state"})
+		idp.handleLoginErr(w, r, genericLoginErrMsg, errors.New("Invalid state"))
 		return
 	}
 
-	codeVerifier := idp.sessionManager.GetString(r.Context(), codeVerifierKey)
+	codeVerifier := idp.sessionManager.PopString(r.Context(), codeVerifierKey)
 	if codeVerifier == "" {
-		http.Error(w, "No code_verifier was found", http.StatusBadRequest)
+		idp.handleLoginErr(w, r, genericLoginErrMsg, errCodeVerifierNotFound)
 		return
 	}
 	code := r.URL.Query().Get("code")
 	token, err := idp.Exchange(r.Context(), code, oauth2.SetAuthURLParam(codeVerifierKey, codeVerifier))
-
 	if err != nil {
-		slog.Error("Failed to exchange the authorization code for a token", "Error", err.Error())
-		http.Error(w, "Something went wrong!", http.StatusInternalServerError)
+		idp.handleLoginErr(w, r, genericLoginErrMsg, err)
 		return
 	}
 	if !token.Valid() {
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Token is invalid"})
+		idp.handleLoginErr(w, r, genericLoginErrMsg, errors.New("Invalid OAuth 2.0 Token"))
 		return
 	}
 	idToken, err := decodeToken(token)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to decode ID Token"})
+		idp.handleLoginErr(w, r, genericLoginErrMsg, err)
 		return
 	}
 	userEmail := idToken.GetString(emailKey)
 	if !idp.isUserAuthorized(userEmail) {
-		slog.Info("User login request rejected because their organization is not white listed", "user", userEmail, "white list", idp.whiteList)
-		w.WriteHeader(http.StatusForbidden)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Forbidden. You are not authorized to use this app"})
+		idp.handleLoginErr(w, r, errAccessForTeamOnly, errors.New("Authentication Error: user attempted to sign in with unauthorized email"), slog.String("user", userEmail), slog.Any("white list", idp.whiteList))
 		return
 	}
 	slog.Info("User logged in", emailKey, userEmail, "ip", r.RemoteAddr)

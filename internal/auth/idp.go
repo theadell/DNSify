@@ -8,18 +8,18 @@ import (
 	"golang.org/x/oauth2/endpoints"
 )
 
-type loginPageData struct {
+type LoginPromptData struct {
 	Text     string
 	Provider string
 }
 
 type Idp struct {
 	oauth2.Config
-	provider       string
-	restrictAccess bool
-	whiteList      []string
-	sessionManager *scs.SessionManager
-	LoginPageData  loginPageData
+	provider        string
+	restrictAccess  bool
+	whiteList       []string
+	sessionManager  *scs.SessionManager
+	LoginPromptData LoginPromptData
 }
 
 type OAuth2ClientConfig struct {
@@ -41,7 +41,7 @@ func NewIdp(config *OAuth2ClientConfig, sessionManager *scs.SessionManager) *Idp
 	endpoint := oauth2.Endpoint{}
 	provider := strings.ToLower(config.Provider)
 	text := "Sign in with " + provider
-	lpd := loginPageData{Text: text, Provider: provider}
+	lpd := LoginPromptData{Text: text, Provider: provider}
 
 	switch provider {
 	case "google":
@@ -85,11 +85,11 @@ func NewIdp(config *OAuth2ClientConfig, sessionManager *scs.SessionManager) *Idp
 	}
 	lpd.Text = text
 	idp := &Idp{
-		Config:         oauthConfig,
-		provider:       provider,
-		whiteList:      config.AuthorizedDomains,
-		sessionManager: sessionManager,
-		LoginPageData:  lpd,
+		Config:          oauthConfig,
+		provider:        provider,
+		whiteList:       config.AuthorizedDomains,
+		sessionManager:  sessionManager,
+		LoginPromptData: lpd,
 	}
 	if config.AuthorizedDomains != nil {
 		idp.restrictAccess = true

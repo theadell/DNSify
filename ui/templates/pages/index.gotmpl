@@ -18,6 +18,13 @@
     </div>
     <div class="login-page__content">
         <div class="login-card">
+
+            {{ if .ErrorMessage }}
+                <div class="login-card__error-message">
+                    {{ .ErrorMessage }}
+                </div>
+            {{ end }}
+
             <h3>Welcome to DNSify Management</h3>
             <p>Log in to access the DNS Management Dashboard.</p>
             <div class="login-card__option">

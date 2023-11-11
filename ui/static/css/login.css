@@ -50,6 +50,15 @@ p {
   margin-top: var(--space-s);
 }
 
+.login-card__error-message {
+  background-color: var(--danger-color);
+  color: var(--special-text-color);
+  padding: var(--space-xs) var(--space-s);
+  border-radius: var(--space-3xs);
+  margin-bottom: var(--space-s);
+  text-align: center;
+  font-weight: bold;
+}
 .login-card__link {
   display: flex;
   align-items: center;

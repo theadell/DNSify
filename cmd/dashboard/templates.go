@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/theadell/dnsify/internal/auth"
 	"github.com/theadell/dnsify/internal/dnsservice"
 )
 
@@ -148,4 +149,9 @@ func ConstructSSEMessage(tmpl *template.Template, data any, eventName string, co
 type DashboardPageData struct {
 	Zone    string
 	Records []dnsservice.Record
+}
+
+type LoginTemplateData struct {
+	auth.LoginPromptData
+	ErrorMessage string
 }

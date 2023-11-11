@@ -8,11 +8,18 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/theadell/dnsify/internal/auth"
 	"github.com/theadell/dnsify/internal/dnsservice"
 )
 
 func (app *App) IndexHandler(w http.ResponseWriter, r *http.Request) {
-	app.render(w, http.StatusOK, "index", app.idp.LoginPageData)
+	errorMsg := app.sessionManager.PopString(r.Context(), auth.LoginErrKey)
+
+	data := LoginTemplateData{
+		LoginPromptData: app.idp.LoginPromptData,
+		ErrorMessage:    errorMsg,
+	}
+	app.render(w, http.StatusOK, "index", data)
 }
 func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 	records := app.dnsClient.GetRecords()
