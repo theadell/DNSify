@@ -10,17 +10,17 @@ import (
 
 const (
 	stateKey               string = "state"
-	codeVerifierKey        string = "code_verifier"
-	codeChallengeKey       string = "code_challenge"
-	codeChallengeMethodKey string = "code_challenge_method"
-	codeChallengeMethod    string = "S256"
-	codeKey                string = "code"
-	idTokenKey             string = "id_token"
-	emailKey               string = "email"
-	nameKey                string = "name"
-	authenticatedKey       string = "authenticated"
-	subjectKey             string = "sub"
-	LoginErrKey            string = "loginError"
+	codeVerifierKey               = "code_verifier"
+	codeChallengeKey              = "code_challenge"
+	codeChallengeMethodKey        = "code_challenge_method"
+	codeChallengeMethod           = "S256"
+	codeKey                       = "code"
+	idTokenKey                    = "id_token"
+	emailKey                      = "email"
+	nameKey                       = "name"
+	authenticatedKey              = "authenticated"
+	subjectKey                    = "sub"
+	LoginErrKey                   = "loginError"
 	errAccessForTeamOnly          = "Oops! Looks like you're not part of the DNSify squad yet. Company team members can log in here."
 	genericLoginErrMsg            = "An error occurred during the login process. Please try again."
 )
@@ -30,14 +30,17 @@ var (
 	errCodeVerifierNotFound         = errors.New("Missing 'code_verifier' in session during OAuth flow.")
 	errStateGenerationFailed        = errors.New("Error generating 'state' parameter for OAuth request.")
 	errCodeVerifierGenerationFailed = errors.New("Error generating 'code_verifier' for OAuth process.")
+	loginEvt                        = slog.String("event", "user_login")
+	loginEvtErr                     = slog.String("event", "user_login_rejected")
 )
 
-func (idp *Idp) handleLoginErr(w http.ResponseWriter, r *http.Request, clientMsg string, err error, fields ...slog.Attr) {
-	if err != nil {
-
-		errorFields := append([]slog.Attr{slog.String("error", err.Error())}, fields...)
-		slog.ErrorContext(r.Context(), "OAuth error", errorFields)
+func (idp *Idp) handleLoginErr(w http.ResponseWriter, r *http.Request, clientMsg string, err error, logAttrs ...slog.Attr) {
+	attrs := make([]any, 0, len(logAttrs)+1)
+	attrs = append(attrs, loginEvtErr, slog.Any("error", err.Error()))
+	for _, attr := range logAttrs {
+		attrs = append(attrs, attr)
 	}
+	slog.ErrorContext(r.Context(), "Authentication event", attrs...)
 	idp.sessionManager.Put(r.Context(), LoginErrKey, clientMsg)
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
@@ -96,11 +99,11 @@ func (idp *Idp) HandleSignInCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	userEmail := idToken.GetString(emailKey)
-	if !idp.isUserAuthorized(userEmail) {
-		idp.handleLoginErr(w, r, errAccessForTeamOnly, errors.New("Authentication Error: user attempted to sign in with unauthorized email"), slog.String("user", userEmail), slog.Any("white list", idp.whiteList))
+	if err := idp.CheckUserAuthorization(userEmail); err != nil {
+		idp.handleLoginErr(w, r, errAccessForTeamOnly, err, slog.String(emailKey, userEmail))
 		return
 	}
-	slog.Info("User logged in", emailKey, userEmail, "ip", r.RemoteAddr)
+	slog.Info("Authentication event", loginEvt, emailKey, userEmail, "ipAddress", r.RemoteAddr)
 	idp.sessionManager.Put(r.Context(), authenticatedKey, true)
 	idp.sessionManager.Put(r.Context(), emailKey, idToken.GetString(emailKey))
 	idp.sessionManager.Put(r.Context(), subjectKey, idToken.GetString(subjectKey))
