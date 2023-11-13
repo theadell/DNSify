@@ -39,6 +39,7 @@ func parseGuards(guardList RecordGuards, zone string) GuardMap {
 	guardMap.AdminOnly = make(map[RecordGuard]bool)
 
 	for _, guardStr := range guardList.Immutable {
+		guardStr = strings.TrimSpace(guardStr)
 		guard, ok := parseGuardString(guardStr, zone)
 		if !ok {
 			slog.Debug("Guard is invalid", "guard", guardStr, "pattern", guardPattern)
@@ -48,6 +49,7 @@ func parseGuards(guardList RecordGuards, zone string) GuardMap {
 	}
 
 	for _, guardStr := range guardList.AdminEditable {
+		guardStr = strings.TrimSpace(guardStr)
 		guard, ok := parseGuardString(guardStr, zone)
 		if !ok {
 			slog.Debug("Guard is invalid", "guard", guardStr, "pattern", guardPattern)

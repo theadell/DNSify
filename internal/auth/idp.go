@@ -64,7 +64,7 @@ func NewIdp(config *OAuth2ClientConfig, sessionManager *scs.SessionManager) *Idp
 		endpoint = endpoints.AWSCognito(config.Domain)
 	default:
 		endpoint.AuthURL = config.AuthURL
-		endpoint.TokenURL = config.AuthURL
+		endpoint.TokenURL = config.TokenURL
 		text = "Sign in with your DNSify account"
 		lpd.Provider = "default"
 	}

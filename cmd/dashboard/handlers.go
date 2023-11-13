@@ -253,7 +253,6 @@ func (app *App) StatusSSEHandler(w http.ResponseWriter, r *http.Request) {
 		case <-ticker.C:
 			sendUpdate()
 		case <-r.Context().Done():
-			slog.Info("Client closed connection", "ip", r.RemoteAddr)
 			return
 		}
 

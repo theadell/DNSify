@@ -46,7 +46,6 @@ func (idp *Idp) handleLoginErr(w http.ResponseWriter, r *http.Request, clientMsg
 }
 
 func (idp *Idp) RequestSignIn(w http.ResponseWriter, r *http.Request) {
-
 	state, err := generateSecureRandom(32)
 	if err != nil {
 		idp.handleLoginErr(w, r, genericLoginErrMsg, errors.Join(err, errStateGenerationFailed))
@@ -60,7 +59,12 @@ func (idp *Idp) RequestSignIn(w http.ResponseWriter, r *http.Request) {
 	}
 	idp.sessionManager.Put(r.Context(), codeVerifierKey, codeVerifier)
 	codeChallenge := generateCodeChallenge(codeVerifier)
-	url := idp.AuthCodeURL(state, oauth2.SetAuthURLParam(codeChallengeKey, codeChallenge), oauth2.SetAuthURLParam(codeChallengeMethodKey, codeChallengeMethod))
+	url := idp.AuthCodeURL(state, oauth2.AccessTypeOnline,
+		oauth2.SetAuthURLParam(codeChallengeKey, codeChallenge),
+		oauth2.SetAuthURLParam(codeChallengeMethodKey, codeChallengeMethod),
+		oauth2.SetAuthURLParam("prompt", "select_account"),
+		oauth2.SetAuthURLParam("hd", "*"),
+	)
 	http.Redirect(w, r, url, http.StatusSeeOther)
 }
 
@@ -70,7 +74,6 @@ func (idp *Idp) HandleSignInCallback(w http.ResponseWriter, r *http.Request) {
 		idp.handleLoginErr(w, r, genericLoginErrMsg, errStateNotFound)
 		return
 	}
-
 	queryState := r.URL.Query().Get(stateKey)
 
 	if state != queryState {
