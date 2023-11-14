@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -12,11 +11,12 @@ import (
 
 func (app *App) Routes() http.Handler {
 	router := chi.NewRouter()
-	router.Use(middleware.RealIP)
 	router.Use(middleware.Recoverer)
+	router.Use(middleware.RealIP)
 
 	// HTML Server
 	htmlRouter := chi.NewRouter()
+	htmlRouter.Use(auth.SecureHeadersMiddleware)
 	htmlRouter.Use(app.sessionManager.LoadAndSave)
 
 	fs := http.FileServer(http.FS(ui.StatifFS))
@@ -59,7 +59,6 @@ func (app *App) Routes() http.Handler {
 	apiRouter := chi.NewRouter()
 	apiRouter.Use(auth.APIKeyValidatorMiddleware(app.keyManager))
 	testHandler := func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("Handling the request")
 		w.WriteHeader(http.StatusOK)
 	}
 	apiRouter.Get("/", testHandler)

@@ -51,3 +51,28 @@ func APIKeyValidatorMiddleware(apiKeyMgr apikeymanager.APIKeyManager) func(http.
 		})
 	}
 }
+
+func SecureHeadersMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		//TODO: Get rid of unsafe-eval
+		csp := "default-src 'self'; " +
+			"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com; " + // Allows scripts from the same origin, inline scripts, eval, and specific CDNs
+			"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " + // Permits styles from the same origin, inline styles, and Google Fonts
+			"img-src 'self' https://images.unsplash.com; " + // Allows images from the same origin and Unsplash
+			"font-src 'self' https://fonts.gstatic.com; " + // Enables fonts from the same origin and Google Fonts
+			"connect-src 'self'; " + // Limits AJAX, WebSocket, and EventSource to the same origin
+			"frame-ancestors 'none'; " + // Prevents the page from being framed (clickjacking protection)
+			"form-action 'self'; " + // Restricts where forms can submit to
+			"base-uri 'self'; " + // Restricts the base URI for relative URLs
+			"object-src 'none';" // Blocks plugins (Flash, Java, etc.)
+		w.Header().Set("Content-Security-Policy", csp)
+
+		w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("X-Frame-Options", "DENY")
+		w.Header().Set("X-XSS-Protection", "0")
+
+		next.ServeHTTP(w, r)
+	})
+}

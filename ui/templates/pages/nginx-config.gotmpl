@@ -3,7 +3,7 @@ Nginx Config
 {{ end }}
 {{ define "additionalStyles" }}
 <link rel="stylesheet" href="/static/css/config-view.css">
-<link rel="stylesheet" href="/static/highlight/styles/default.min.css">
+<link rel="stylesheet" href="/static/vendor/highlight/styles/default.min.css">
 {{ end }}
 {{ define "content" }}
 
@@ -145,6 +145,6 @@ document.getElementById('btn-config-download').addEventListener('click', functio
   hljs.highlightAll();
  });
 </script>
-<script src="/static/highlight/highlight.min.js"> </script>
+<script src="/static/vendor/highlight/highlight.min.js"> </script>
 <script>hljs.highlightAll();</script>
 {{- end -}}

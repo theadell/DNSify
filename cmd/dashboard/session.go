@@ -11,11 +11,11 @@ import (
 func NewSessionManager(useSecureCookie bool) *scs.SessionManager {
 	sessionManager := scs.New()
 	sessionManager.Lifetime = 1 * time.Hour
-	sessionManager.Cookie.Name = "session_id"
+	sessionManager.Cookie.Name = "SID"
 	sessionManager.Cookie.HttpOnly = true
 	sessionManager.Cookie.SameSite = http.SameSiteLaxMode
 	sessionManager.Store = memstore.New()
-	sessionManager.IdleTimeout = 20 * time.Minute
+	sessionManager.IdleTimeout = 30 * time.Minute
 	sessionManager.Cookie.Secure = useSecureCookie
 	return sessionManager
 }
