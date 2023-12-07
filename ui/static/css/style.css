@@ -502,6 +502,10 @@ p {
   flex-grow: 0;
 }
 
+.dns-entry__input-group--ttl {
+  flex: 0 1 200px;
+}
+
 .dns-entry__input-group--hostname {
   position: relative;
 }
@@ -563,6 +567,16 @@ input.error {
   overflow: hidden;
   border-radius: 5px;
   margin-top: 0.5rem;
+}
+
+.dns-records__description {
+  color: var(--text-soft-color);
+  margin-right: 5px;
+  font-weight: normal;
+}
+
+[data-theme="light"] .dns-records__description {
+  color: var(--disabled-text-color);
 }
 
 .dns-records__heading {

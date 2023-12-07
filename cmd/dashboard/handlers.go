@@ -103,7 +103,7 @@ func (app *App) configAdjusterHandler(w http.ResponseWriter, r *http.Request) {
 
 func (app *App) GetRecordsHandler(w http.ResponseWriter, r *http.Request) {
 	recordType := r.URL.Query().Get("type")
-	if recordType != "A" && recordType != "AAAA" {
+	if !slices.Contains(dnsservice.SupportedTypes, recordType) {
 		app.clientError(w, http.StatusBadRequest, "Unsupported record type")
 		return
 	}
@@ -119,8 +119,8 @@ func (app *App) AddRecordHandler(w http.ResponseWriter, r *http.Request) {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
-	hostname, ip, ttl, recordType := r.FormValue("hostname"), r.FormValue("ip"), r.FormValue("ttl"), r.FormValue("type")
-	record, err := dnsservice.NewRecordFromRaw(recordType, hostname, ip, ttl, app.dnsClient.GetZone())
+	hostname, value, ttl, recordType := r.FormValue("hostname"), r.FormValue("value"), r.FormValue("ttl"), r.FormValue("type")
+	record, err := dnsservice.NewRecordFromRaw(recordType, hostname, value, ttl, app.dnsClient.GetZone())
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest, err.Error())
 		return
@@ -138,8 +138,8 @@ func (app *App) notFoundHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) DeleteRecordHandler(w http.ResponseWriter, r *http.Request) {
-	hostname, ip, ttl, recordType := r.FormValue("hostname"), r.FormValue("ip"), r.FormValue("ttl"), r.FormValue("type")
-	record, err := dnsservice.NewRecordFromRaw(recordType, hostname, ip, ttl, app.dnsClient.GetZone())
+	hostname, value, ttl, recordType := r.FormValue("hostname"), r.FormValue("value"), r.FormValue("ttl"), r.FormValue("type")
+	record, err := dnsservice.NewRecordFromRaw(recordType, hostname, value, ttl, app.dnsClient.GetZone())
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest, err.Error())
 		return
