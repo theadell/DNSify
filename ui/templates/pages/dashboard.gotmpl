@@ -7,20 +7,37 @@ DNSify | Dashboard
   <tr class="dns-records__row fade-in fade-row-out" id="{{.Hash}}">
     <td>{{.Data.RecordType}}</td>
     <td>{{.Name}}</td>
-    <td>directs to {{.Data.Value}}</td>
+    <td>
+      <span class="dns-records__description">
+        {{- if eq .Data.RecordType "A" -}} resolves to 
+        {{- else if eq .Data.RecordType "AAAA" -}} resolves to 
+        {{- else if eq .Data.RecordType "CNAME" -}} is an alias of 
+        {{- else if eq .Data.RecordType "TXT" -}} returns 
+        {{- else if eq .Data.RecordType "NS" -}} directs to 
+        {{- else if eq .Data.RecordType "MX" -}} mail handled by 
+        {{- else if eq .Data.RecordType "SRV" -}} service located at 
+        {{- else if eq .Data.RecordType "CAA" -}} authorization at 
+        {{- end -}}
+      </span>
+      {{.Data.Value}}
+    </td>    
+
     <td>{{.TTL}}</td>
     <td class="dns-records__action-cell">
-    <form class="dns-records__config-form" action="/dashboard/config/nginx" method="POST">
-        <input type="hidden" name="hash" value="{{.Hash}}">
-        <button class="btn btn-clear" type="submit">Config</button>
+
+    {{- if or (eq .Data.RecordType "A") (eq .Data.RecordType "AAAA") -}}
+      <form class="dns-records__config-form" action="/dashboard/config/nginx" method="POST">
+          <input type="hidden" name="hash" value="{{.Hash}}">
+          <button class="btn btn-clear" type="submit">Config</button>
       </form>
-      <button class="btn btn-delete" 
-              hx-delete="/records?Type={{.Data.RecordType}}&FQDN={{.Name}}&IP={{.Data.Value}}&TTL={{.TTL}}"
-              hx-confirm="Are you sure you want to delete this record?" 
-              hx-target="closest tr" 
-              hx-swap="outerHTML swap:1s">
-        Delete
-      </button>
+    {{- end -}}
+    <button class="btn btn-delete" 
+            hx-delete="/records?Type={{.Data.RecordType}}&FQDN={{.Name}}&IP={{.Data.Value}}&TTL={{.TTL}}"
+            hx-confirm="Are you sure you want to delete this record?" 
+            hx-target="closest tr" 
+            hx-swap="outerHTML swap:1s">
+      Delete
+    </button>
     </td>
   </tr>
 {{ end }}
@@ -79,9 +96,8 @@ DNSify | Dashboard
             hx-indicator="#spinner"
             x-init="init"
           >
-            <div
-              class="dns-entry__input-group dns-entry__input-group--hostname"
-            >
+            <!-- Hostname  -->
+            <div class="dns-entry__input-group dns-entry__input-group--hostname">
               <label for="hostname">Hostname</label>
               <input
                 type="text"
@@ -107,26 +123,23 @@ DNSify | Dashboard
               ></span>
             </div>
 
-            <div class="dns-entry__input-group">
-              <label for="ip">Will Direct To</label>
-              <input
-                type="text"
-                id="ip"
-                name="ip"
-                placeholder="Enter '@' or a custom IP Address"
-                required
-                x-model="ip"
-                @input="ipDirty=true"
-                @blur="ipDirty=true"
-                @change="ipDirty=true"
-                :class="{ 'error': !validateIp() }"
-              />
-              <span class="dns-entry__error-message" x-show="!validateIp()"
-                >Invalid IP</span
-              >
-            </div>
-
-            <div class="dns-entry__input-group">
+            <!-- Unified Value Input Field -->
+              <div class="dns-entry__input-group">
+                  <label x-text="valueFieldLabel()"></label>
+                  <input
+                      type="text"
+                      :id="valueFieldId()"
+                      name="value"
+                      :placeholder="valueFieldPlaceholder()"
+                      x-model="recordData.value"
+                      @input="valueDirty = true"
+                      :class="{ 'error': valueDirty && !validateValue() }"
+                  />
+                  <span class="dns-entry__error-message" x-show="valueDirty && !validateValue()" x-text="valueErrorMessage()"></span>
+              </div>
+        
+            <!-- TTL  -->
+            <div class="dns-entry__input-group dns-entry__input-group--ttl">
               <label for="ttl">TTL (seconds)</label>
               <input
                 type="number"
@@ -191,8 +204,8 @@ DNSify | Dashboard
 <script>
       const dnsForm = {
         activeType: "A",
-        dnsTypes: ["A", "AAAA", "CNAME", "NS", "MX"],
-        supportedTypes: ["A", "AAAA"],
+        dnsTypes: ["A", "AAAA", "CNAME", "NS", "MX", "TXT","SRV", "SOA", "CAA"],
+        supportedTypes: ["A", "AAAA", "CNAME", "NS","MX", "TXT"],
         hostname: "",
         hostnameError: '',
         ip: "",
@@ -203,6 +216,84 @@ DNSify | Dashboard
         ipv4Regex: /^(?!0)(?!.*\.$)((1?\d?\d|25[0-5]|2[0-4]\d)(\.|$)){4}$/,
         ipv6Regex: /^([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}$/,
 
+        valueDirty: false,
+        recordData: {
+            value: ''
+        },
+
+        valueFieldLabel() {
+            switch (this.activeType) {
+                case 'A': return "IPv4 Address";
+                case 'AAAA': return 'IPv6 Address';
+                case 'CNAME': return 'Alias';
+                case 'NS': return 'Nameserver';
+                case "MX": return 'MX Record (Priority: Mail Server)'
+                case "TXT": return 'TXT Value'
+                default: return '';
+            }
+        },
+
+        valueFieldId() {
+            return this.activeType.toLowerCase() + 'Value';
+        },
+
+        valueFieldPlaceholder() {
+            switch (this.activeType) {
+                case 'A': return "Enter IPv4 Address";
+                case 'AAAA': return 'Enter IPv6 Address';
+                case 'CNAME': return 'Enter Alias FQDN (e.g., host.example.com.)';
+                case 'NS': return 'Enter Nameserver FQDN (e.g., host.example.com.)';
+                case 'MX': return 'Enter Priority and Mail Server (e.g., 10:mail.example.com.)'; 
+                case 'TXT': return 'Enter TXT String here'; 
+                default: return '';
+            }
+        },
+
+        valueErrorMessage() {
+            switch (this.activeType) {
+                case 'A': return 'Invalid IPv4 Address';
+                case 'AAAA': return 'Invalid IPv6 Address';
+                case 'CNAME': return 'Invalid Alias';
+                case 'NS': return 'Invalid Nameserver';
+                case 'MX': return 'Invalid MX Record';
+                case 'TXT': return 'Invalid TXT Value';
+                default: return '';
+            }
+        },
+
+        validateValue() {
+            const value = this.recordData.value.trim();
+            switch (this.activeType) {
+                case 'A': return this.ipv4Regex.test(value);
+                case 'AAAA': return this.ipv6Regex.test(value);
+                case 'CNAME':
+                case 'NS': return /^[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,}\.$/.test(value);
+                case 'MX': return this.validateMX(value);
+                case 'TXT': return this.validateTXT(value);
+                default: return false;
+            }
+        },
+
+       formatValue() {
+              return this.recordData.value;
+          },
+
+        isValidForm() {
+            const valid = this.validateHostname() && this.validateValue() && this.validateTtl();
+            console.log("The validity is: ", valid)
+            return valid;
+        },
+            
+        validateIP() {
+          if (!this.ipDirty) return true;
+          const regex = this.activeType === 'AAAA' ? this.ipv6Regex : this.ipv4Regex;
+          return regex.test(this.recordData.ip.trim());
+        },
+      validateNameserver() {
+          if (!this.nameserverDirty) return true;
+          const regex = /^[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,}$/;
+          return regex.test(this.recordData.nameserver.trim());
+        },
         validateHostname() {
           if (!this.hostnameDirty) {
             return true;
@@ -247,6 +338,16 @@ DNSify | Dashboard
           return true;
         },
 
+        validateMX(value) {
+            const parts = value.split(':');
+            if (parts.length !== 2) return false;
+            const priority = parseInt(parts[0], 10);
+            if (isNaN(priority)) return false;
+            return /^[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,}\.$/.test(parts[1]);
+        },
+        validateTXT(value) {
+            return value.length > 0 && value.length <= 255;
+        },
         validateTtl() {
           const value = parseInt(this.ttl.trim(), 10);
           if (isNaN(value) || value < 60) {
@@ -255,15 +356,6 @@ DNSify | Dashboard
           return true;
         },
 
-        isValidForm() {
-          return (
-            this.validateHostname() &&
-            this.validateIp() &&
-            this.validateTtl() &&
-            this.hostnameDirty &&
-            this.ipDirty
-          );
-        },
         isFormFilled: function () {
           return this.hostname && this.ip && this.ttl;
         },
@@ -280,8 +372,10 @@ DNSify | Dashboard
           this.ip = ''
           this.hostnameDirty = false 
           this.ipDirty = false
+          this.recordData.value = ''
+          this.valueDirty = false
         },
-
+        
          init() {
               this.$el.addEventListener('htmx:afterRequest', (e) => {
               if(e.detail.successful && e.detail.requestConfig.verb == "post") {

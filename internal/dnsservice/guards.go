@@ -10,7 +10,7 @@ const guardPattern = `^(?i)(\*|A|AAAA|SOA|NS|CNAME|DNAME|CAA|MX)/(([a-zA-Z0-9-]+
 
 var (
 	guardRegex     = regexp.MustCompile(guardPattern)
-	supportedTypes = [...]string{"SOA", "NS", "MX", "CNAME", "DNAME", "CAA", "A", "AAAA"}
+	SupportedTypes = []string{"SOA", "NS", "MX", "CNAME", "DNAME", "CAA", "A", "AAAA", "TXT"}
 )
 
 type RecordGuards struct {
