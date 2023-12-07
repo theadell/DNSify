@@ -4,7 +4,6 @@ import (
 	"log/slog"
 	"net/http"
 	"slices"
-	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -24,7 +23,7 @@ func (app *App) IndexHandler(w http.ResponseWriter, r *http.Request) {
 func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 	records := app.dnsClient.GetRecords()
 	records = slices.DeleteFunc(records, func(r dnsservice.Record) bool {
-		return r.Type != "A"
+		return r.Data.RecordType() != "A"
 	})
 	data := DashboardPageData{
 		Zone:    app.dnsClient.GetZone(),
@@ -77,7 +76,7 @@ func (app *App) configHandler(w http.ResponseWriter, r *http.Request) {
 		app.clientError(w, http.StatusBadRequest, "No matching record found")
 		return
 	}
-	aaaaRecord := app.dnsClient.GetRecordForFQDN(record.FQDN, "AAAA")
+	aaaaRecord := app.dnsClient.GetRecordForFQDN(record.Name, "AAAA")
 	c := NewNginxConfig(*record, aaaaRecord, "http://localhost:8080")
 	app.render(w, http.StatusOK, "nginx-config", c)
 }
@@ -110,7 +109,7 @@ func (app *App) GetRecordsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	records := app.dnsClient.GetRecords()
 	records = slices.DeleteFunc(records, func(r dnsservice.Record) bool {
-		return r.Type != recordType
+		return r.Data.RecordType() != recordType
 	})
 	app.renderTemplateFragment(w, http.StatusOK, "dashboard", "record-rows", records)
 }
@@ -120,37 +119,15 @@ func (app *App) AddRecordHandler(w http.ResponseWriter, r *http.Request) {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
-
 	hostname, ip, ttl, recordType := r.FormValue("hostname"), r.FormValue("ip"), r.FormValue("ttl"), r.FormValue("type")
-
-	if err := validateRecordReq(hostname, ip, ttl, recordType); err != nil {
-		slog.Error("Invalid record request", "error", err)
+	record, err := dnsservice.NewRecordFromRaw(recordType, hostname, ip, ttl, app.dnsClient.GetZone())
+	if err != nil {
 		app.clientError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	ttlNum, err := stringToUint(ttl)
+	err = app.dnsClient.AddRecord(*record)
 	if err != nil {
-		app.clientError(w, http.StatusBadRequest, "Invalid TTL", err.Error())
-		return
-	}
-
-	record := dnsservice.NewRecordFromHost(recordType, hostname, ip, ttlNum, app.dnsClient.GetZone(), app.dnsClient.GetIPv4(), app.dnsClient.GetIPv6())
-	if app.dnsClient.GetRecordByHash(record.Hash) != nil {
-		app.clientError(w, http.StatusBadRequest, "Duplication Error", "Record Already Exists")
-		return
-	}
-
-	err = app.dnsClient.AddRecord(record)
-	if err != nil {
-		if err == dnsservice.ErrImmutableRecord {
-			app.clientError(w, http.StatusBadRequest, "This record is read only")
-			return
-		} else if err == dnsservice.ErrNotAuthorized {
-			app.clientError(w, http.StatusUnauthorized, "You do not have the required permissions to perform this action.")
-			return
-		}
-		app.serverError(w, err)
+		handleDNSError(err, w, app)
 		return
 	}
 	app.renderTemplateFragment(w, http.StatusOK, "dashboard", "record-row", &record)
@@ -161,40 +138,16 @@ func (app *App) notFoundHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) DeleteRecordHandler(w http.ResponseWriter, r *http.Request) {
-
-	recordType := strings.TrimSpace(r.URL.Query().Get("Type"))
-	fqdn := strings.TrimSpace(r.URL.Query().Get("FQDN"))
-	ip := strings.TrimSpace(r.URL.Query().Get("IP"))
-	ttl := strings.TrimSpace(r.URL.Query().Get("TTL"))
-
-	if !isValidType(recordType) {
-		app.clientError(w, http.StatusBadRequest, "Invalid DNS Record Type")
-		return
-	}
-
-	if !isValidFQDN(fqdn) || (recordType == "A" && !isValidIPv4(ip) || recordType == "AAAA" && !isValidIPv6(ip)) || !isValidTTL(ttl) {
-		app.clientError(w, http.StatusBadRequest, "Invalid record")
-		return
-	}
-
-	record := dnsservice.Record{
-		Type: recordType,
-		FQDN: fqdn,
-		IP:   ip,
-	}
-
-	err := app.dnsClient.RemoveRecord(record)
+	hostname, ip, ttl, recordType := r.FormValue("hostname"), r.FormValue("ip"), r.FormValue("ttl"), r.FormValue("type")
+	record, err := dnsservice.NewRecordFromRaw(recordType, hostname, ip, ttl, app.dnsClient.GetZone())
 	if err != nil {
-		if err == dnsservice.ErrImmutableRecord {
-			app.clientError(w, http.StatusBadRequest, "This record is read only")
-			return
-		} else if err == dnsservice.ErrNotAuthorized {
-			app.clientError(w, http.StatusUnauthorized, "You do not have the required permissions to perform this action.")
-			return
-		}
-
+		app.clientError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	err = app.dnsClient.RemoveRecord(*record)
+	if err != nil {
 		slog.Error("Failed to delete record")
-		app.serverError(w, err)
+		handleDNSError(err, w, app)
 		return
 	}
 	w.WriteHeader(http.StatusOK)

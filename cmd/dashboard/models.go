@@ -25,18 +25,19 @@ type NginxConfig struct {
 }
 
 func NewNginxConfig(aRecord dnsservice.Record, aaaaRecord *dnsservice.Record, addr string) NginxConfig {
-	cleanFQDN := strings.TrimSuffix(aRecord.FQDN, ".")
+	cleanFQDN := strings.TrimSuffix(aRecord.Name, ".")
 	config := NginxConfig{
 		Hash:    aRecord.Hash,
 		Domain:  cleanFQDN,
 		Addr:    addr,
-		IPv4:    aRecord.IP,
+		IPv4:    aRecord.Data.String(),
 		SSLCert: "/etc/letsencrypt/live/" + cleanFQDN + "/fullchain.pem",
 		SSLKey:  "/etc/letsencrypt/live/" + cleanFQDN + "/privkey.pem",
 	}
 
 	if aaaaRecord != nil {
-		config.IPv6 = &aaaaRecord.IP
+		ipv6 := aaaaRecord.Data.String()
+		config.IPv6 = &ipv6
 	}
 	return config
 }

@@ -1,17 +1,10 @@
 package dnsservice
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
 	"fmt"
-	"log/slog"
-	"slices"
 	"strconv"
-	"time"
-
-	"github.com/miekg/dns"
-	"github.com/theadell/dnsify/internal/backoff"
+	"strings"
 )
 
 var (
@@ -21,216 +14,117 @@ var (
 	ErrRecordDeletion  = errors.New("failed to delete record")
 )
 
+// Record represents a DNS resource record as defined in RFC 1035.
 type Record struct {
-	Type string
-	FQDN string
-	IP   string
-	TTL  uint
+
+	// Name specifies the domain name of the DNS record.
+	Name string
+
+	// TTL (Time To Live) indicates the duration in seconds that the record may be cached.
+	// It corresponds to the TTL field in DNS resource records.
+	TTL uint
+
+	// Data holds the specific data associated with the DNS record (such as an IP address for A records).
+	// It is an implementation of the RecordData interface, providing access to the record's type, value, and string representation.
+	Data RecordData
+
+	// Hash is a unique identifier for the record, typically used for efficient lookups and comparisons.
 	Hash string
 }
 
+// String returns the standard string representation of the DNS record in a format typically used in DNS zone files.
 func (r Record) String() string {
-	return fmt.Sprintf("%s %d IN %s %s", r.FQDN, r.TTL, r.Type, r.IP)
+	class := "IN"
+	return fmt.Sprintf("%s %d %s %s", r.Name, r.TTL, class, r.Data.String())
 }
 
-func NewRecord(typ, fqdn, ip string, ttl uint) Record {
+func NewRecord(fqdn string, ttl uint, data RecordData) Record {
 	r := Record{
-		Type: typ,
-		FQDN: fqdn,
-		IP:   ip,
+		Name: fqdn,
 		TTL:  ttl,
+		Data: data,
 	}
 	r.Hash = hashRecord(r)
 	return r
 }
-func NewRecordFromHost(typ, hostname, ip string, ttl uint, zone, ipv4, ipv6 string) Record {
-	if ip == "@" {
-		if typ == "A" {
-			ip = ipv4
-		} else if typ == "AAAA" {
-			ip = ipv6
-		}
-	}
-	return NewRecord(typ, toFQDN(hostname, zone), ip, ttl)
-}
 
-func (c *Client) GetRecords() []Record {
-	c.mutex.RLock()
-	defer c.mutex.RUnlock()
-
-	// Filter out immutable records
-	var recordsCopy []Record
-	for _, record := range c.cache {
-		if !c.isImmutable(record.Type, record.FQDN) {
-			recordsCopy = append(recordsCopy, record)
-		}
+// NewRecordFromRaw constructs a Record from raw string inputs. It takes the DNS record type,
+// hostname, record-specific data, TTL as a string, and the DNS zone, performing necessary
+// validation and parsing. Returns a new Record and an error if the inputs are invalid.
+// For MX records, 'value' should be in the "priority:mailserver" format.
+// For SRV records, 'value' should be in the "priority:weight:port:target" format.
+func NewRecordFromRaw(recordType, hostname, value, ttlStr, zone string) (*Record, error) {
+	ttl, err := strconv.ParseUint(ttlStr, 10, 32)
+	if err != nil {
+		return nil, fmt.Errorf("invalid TTL: %s", ttlStr)
 	}
 
-	return recordsCopy
-}
+	fqdn := toFQDN(hostname, zone)
 
-func (c *Client) GetRecordByHash(targetHash string) *Record {
-	c.mutex.RLock()
-	defer c.mutex.RUnlock()
-
-	for _, record := range c.cache {
-		if record.Hash == targetHash {
-			recordCopy := record
-			return &recordCopy
-		}
-	}
-	return nil
-}
-func (c *Client) GetRecordByFQDNAndType(recordFQDN, recordType string) *Record {
-	c.mutex.RLock()
-	defer c.mutex.RUnlock()
-	idx := slices.IndexFunc(c.cache, func(record Record) bool {
-		return record.Type == recordType && record.FQDN == recordFQDN
-	})
-	if idx != -1 {
-		recordCopy := c.cache[idx]
-		return &recordCopy
-	}
-	return nil
-}
-
-func (c *Client) GetRecordForFQDN(targetFQDN, recordType string) *Record {
-	c.mutex.RLock()
-	defer c.mutex.RUnlock()
-
-	for _, record := range c.cache {
-		if record.Type == recordType && record.FQDN == targetFQDN {
-			recordCopy := record
-			return &recordCopy
-		}
-	}
-	return nil
-}
-
-func (c *Client) AddRecord(record Record) error {
-	slog.Debug("Attempting to add record", "record", record)
-
-	if c.isImmutable(record.Type, record.FQDN) {
-		slog.Warn("Attempted to modify an immutable record", "record", record.FQDN)
-		return ErrImmutableRecord
-	}
-
-	retryConfig := backoff.DefaultRetryConfig
-	retryConfig.MaxRetries = 2
-
-	if c.exists(record) {
-		slog.Debug("Record already exists, will attempt to override it by deleting it and then creating it again", "record", record)
-		removeRecordOp := func() error {
-			return c.RemoveRecord(record)
-		}
-		err := backoff.RetryWithBackoff(removeRecordOp, retryConfig)
+	var recordData RecordData
+	switch recordType {
+	case "A":
+		err = validateARecord(value)
 		if err != nil {
-			return ErrRecordDeletion
+			return nil, err
 		}
-	}
-
-	msg := new(dns.Msg)
-	msg.SetUpdate(c.zone)
-
-	resourceRecord, err := dns.NewRR(fmt.Sprintf("%s %d %s %s", record.FQDN, record.TTL, record.Type, record.IP))
-	if err != nil {
-		slog.Error("Failed to create new resource record", "error", err)
-		return fmt.Errorf("%w: %v", ErrRecordCreation, err)
-	}
-
-	msg.Insert([]dns.RR{resourceRecord})
-	msg.SetTsig(c.tsigKey, dns.HmacSHA256, 300, time.Now().Unix())
-
-	replyMsg, _, err := c.client.Exchange(msg, c.serverAddr)
-	if err != nil {
-		slog.Error("Failed to exchange DNS message", "error", err)
-		return fmt.Errorf("failed to create new resource record: %w", err)
-	}
-
-	if replyMsg.Rcode != dns.RcodeSuccess {
-		slog.Error("Failed to update record", "status_code", replyMsg.Rcode)
-		return fmt.Errorf("%w: status code %d", ErrRecordCreation, replyMsg.Rcode)
-	}
-
-	c.mutex.Lock()
-	defer c.mutex.Unlock()
-	record.Hash = hashRecord(record)
-	c.cache = append(c.cache, record)
-
-	slog.Info("Record added successfully", "record", record)
-	return nil
-}
-
-func (c *Client) RemoveRecord(record Record) error {
-	if c.isImmutable(record.Type, record.FQDN) {
-		slog.Warn("Attempted to delete an immutable record", "record", record.FQDN)
-		return ErrImmutableRecord
-	}
-
-	msg := new(dns.Msg)
-	msg.SetUpdate(c.zone)
-
-	resourceRecord, err := dns.NewRR(fmt.Sprintf("%s %d %s %s", record.FQDN, record.TTL, record.Type, record.IP))
-	if err != nil {
-		return fmt.Errorf("failed to create Resource Record: %w", err)
-	}
-
-	msg.Remove([]dns.RR{resourceRecord})
-	msg.SetTsig(c.tsigKey, dns.HmacSHA256, 300, time.Now().Unix())
-
-	replyMsg, _, err := c.client.Exchange(msg, c.serverAddr)
-	if err != nil {
-		return fmt.Errorf("failed to exchange message: %w", err)
-	}
-
-	if replyMsg.Rcode != dns.RcodeSuccess {
-		return fmt.Errorf("%w: status code %d", ErrRecordDeletion, replyMsg.Rcode)
-	}
-
-	c.mutex.Lock()
-	defer c.mutex.Unlock()
-	for i, r := range c.cache {
-		if r.FQDN == record.FQDN && r.Type == record.Type && r.IP == record.IP {
-			c.cache = append(c.cache[:i], c.cache[i+1:]...)
-			break
+		recordData = &ARecord{IP: value}
+	case "AAAA":
+		err = validateAAAARecord(value)
+		if err != nil {
+			return nil, err
 		}
+		recordData = &AAAARecord{IPv6: value}
+	case "MX":
+		err = validateMXRecord(value)
+		if err != nil {
+			return nil, err
+		}
+		parts := strings.Split(value, ":")
+		priority, _ := strconv.Atoi(parts[0]) // Already validated
+		recordData = &MXRecord{Priority: uint16(priority), MailServer: parts[1]}
+	case "NS":
+		err = validateNSRecord(value)
+		if err != nil {
+			return nil, err
+		}
+		recordData = &NSRecord{NameServer: value}
+
+	case "CNAME":
+		err = validateCNAMERecord(value)
+		if err != nil {
+			return nil, err
+		}
+		recordData = &CNAMERecord{Alias: value}
+
+	case "TXT":
+		err = validateTXTRecord(value)
+		if err != nil {
+			return nil, err
+		}
+		recordData = &TXTRecord{Text: value}
+	case "SRV":
+		err = validateSRVRecord(value)
+		if err != nil {
+			return nil, err
+		}
+		parts := strings.Split(value, ":")
+		if len(parts) != 4 {
+			return nil, fmt.Errorf("invalid SRV record format")
+		}
+		priority, _ := strconv.Atoi(parts[0]) // Assuming validation checks these
+		weight, _ := strconv.Atoi(parts[1])
+		port, _ := strconv.Atoi(parts[2])
+		recordData = &SRVRecord{
+			Priority: uint16(priority),
+			Weight:   uint16(weight),
+			Port:     uint16(port),
+			Target:   parts[3],
+		}
+	default:
+		return nil, fmt.Errorf("unsupported record type: %s", recordType)
 	}
 
-	slog.Info("Record removed successfully", "record", record)
-	return nil
-}
-func hashRecord(record Record) string {
-	data := record.Type + record.FQDN + record.IP + strconv.FormatUint(uint64(record.TTL), 10)
-	hash := sha256.Sum256([]byte(data))
-	return hex.EncodeToString(hash[:])
-}
-func (c *Client) isImmutable(t, fqdn string) bool {
-	tguard := NewRecordGuard(t, fqdn)
-	if _, ok := c.guards.Immutable[tguard]; ok {
-		return ok
-	}
-	wildcardGuard := NewRecordGuard("*", fqdn)
-	if _, ok := c.guards.Immutable[wildcardGuard]; ok {
-		return true
-	}
-	return false
-}
-
-func (c *Client) isAdminEditable(t, fqdn string) bool {
-	tguard := NewRecordGuard(t, fqdn)
-	if _, ok := c.guards.AdminOnly[tguard]; ok {
-		return ok
-	}
-	wildcardGuard := NewRecordGuard("*", fqdn)
-	if _, ok := c.guards.AdminOnly[wildcardGuard]; ok {
-		return true
-	}
-	return false
-}
-
-func (c *Client) exists(r Record) bool {
-	if c.GetRecordByFQDNAndType(r.FQDN, r.Type) != nil {
-		return true
-	}
-	return false
+	r := NewRecord(fqdn, uint(ttl), recordData)
+	return &r, nil
 }

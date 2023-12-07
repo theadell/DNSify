@@ -5,9 +5,9 @@ DNSify | Dashboard
 
 {{ define "record-row" }}
   <tr class="dns-records__row fade-in fade-row-out" id="{{.Hash}}">
-    <td>{{.Type}}</td>
-    <td>{{.FQDN}}</td>
-    <td>directs to {{.IP}}</td>
+    <td>{{.Data.RecordType}}</td>
+    <td>{{.Name}}</td>
+    <td>directs to {{.Data.Value}}</td>
     <td>{{.TTL}}</td>
     <td class="dns-records__action-cell">
     <form class="dns-records__config-form" action="/dashboard/config/nginx" method="POST">
@@ -15,7 +15,7 @@ DNSify | Dashboard
         <button class="btn btn-clear" type="submit">Config</button>
       </form>
       <button class="btn btn-delete" 
-              hx-delete="/records?Type={{.Type}}&FQDN={{.FQDN}}&IP={{.IP}}&TTL={{.TTL}}"
+              hx-delete="/records?Type={{.Data.RecordType}}&FQDN={{.Name}}&IP={{.Data.Value}}&TTL={{.TTL}}"
               hx-confirm="Are you sure you want to delete this record?" 
               hx-target="closest tr" 
               hx-swap="outerHTML swap:1s">

@@ -3,6 +3,7 @@ package dnsservice
 import (
 	"errors"
 	"log/slog"
+	"strings"
 	"sync"
 	"time"
 
@@ -19,7 +20,6 @@ type Service interface {
 	RemoveRecord(Record) error
 	GetRecordByHash(string) *Record
 	GetRecordForFQDN(string, string) *Record
-	GetRecordByFQDNAndType(string, string) *Record
 	GetZone() string
 	GetIPv4() string
 	GetIPv6() string
@@ -160,14 +160,29 @@ func fetchZoneRecords(domain, dnsServer, keyName, secret string) ([]Record, erro
 		rr = append(rr, env.RR...)
 	}
 	for _, r := range rr {
+
+		var recordData RecordData
+		recordName := r.Header().Name
+		recordTTL := uint(r.Header().Ttl)
+
 		switch record := r.(type) {
 		case *dns.A:
-			records = append(records, NewRecord("A", record.Hdr.Name, record.A.String(), uint(record.Hdr.Ttl)))
+			recordData = &ARecord{IP: record.A.String()}
 		case *dns.AAAA:
-			records = append(records, NewRecord("AAAA", record.Hdr.Name, record.AAAA.String(), uint(record.Hdr.Ttl)))
+			recordData = &AAAARecord{IPv6: record.AAAA.String()}
 		case *dns.NS:
-			records = append(records, NewRecord("NS", record.Hdr.Name, record.Ns, uint(record.Hdr.Ttl)))
+			recordData = &NSRecord{NameServer: record.Ns}
+		case *dns.CNAME:
+			recordData = &CNAMERecord{Alias: record.Target}
+		case *dns.MX:
+			recordData = &MXRecord{Priority: uint16(record.Preference), MailServer: record.Mx}
+		case *dns.TXT:
+			recordData = &TXTRecord{Text: strings.Join(record.Txt, "")}
+		default:
+			continue // Skip unsupported record types
 		}
+
+		records = append(records, NewRecord(recordName, recordTTL, recordData))
 	}
 
 	return records, nil

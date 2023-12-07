@@ -2,7 +2,6 @@ package dnsservice
 
 import (
 	"fmt"
-	"slices"
 	"sync"
 	"time"
 )
@@ -18,17 +17,19 @@ func NewMockClient() *MockClient {
 		mutex: sync.RWMutex{},
 	}
 }
+
 func NewMockClientWithTestRecords() *MockClient {
 	m := &MockClient{
 		cache: make([]Record, 0),
 		mutex: sync.RWMutex{},
 	}
-	m.AddRecord(NewRecord("A", "foo.rusty-leipzig.com.", "192.168.1.1", 100))
-	m.AddRecord(NewRecord("AAAA", "foo.rusty-leipzig.com.", "::1", 100))
-	m.AddRecord(NewRecord("A", "bar.rusty-leipzig.com.", "192.168.1.1", 100))
-	m.AddRecord(NewRecord("AAAA", "bar.rusty-leipzig.com.", "::1", 100))
+	m.AddRecord(NewRecord("foo.rusty-leipzig.com.", 100, &ARecord{IP: "192.168.1.1"}))
+	m.AddRecord(NewRecord("foo.rusty-leipzig.com.", 100, &AAAARecord{IPv6: "::1"}))
+	m.AddRecord(NewRecord("bar.rusty-leipzig.com.", 100, &ARecord{IP: "192.168.1.1"}))
+	m.AddRecord(NewRecord("bar.rusty-leipzig.com.", 100, &AAAARecord{IPv6: "::1"}))
 	return m
 }
+
 func (m *MockClient) GetZone() string {
 	return "mock.example.com."
 }
@@ -47,33 +48,18 @@ func (m *MockClient) GetRecords() []Record {
 	copy(recordsCopy, m.cache)
 	return recordsCopy
 }
-
 func (m *MockClient) GetRecordForFQDN(targetFQDN, recordType string) *Record {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 
 	for _, record := range m.cache {
-		if record.Type == recordType && record.FQDN == targetFQDN {
+		if record.Data.RecordType() == recordType && record.Name == targetFQDN {
 			recordCopy := record
 			return &recordCopy
 		}
 	}
 	return nil
 }
-
-func (m *MockClient) GetRecordByFQDNAndType(recordFQDN, recordType string) *Record {
-	m.mutex.RLock()
-	defer m.mutex.RUnlock()
-	idx := slices.IndexFunc(m.cache, func(record Record) bool {
-		return record.Type == recordType && record.FQDN == recordFQDN
-	})
-	if idx != -1 {
-		recordCopy := m.cache[idx]
-		return &recordCopy
-	}
-	return nil
-}
-
 func (m *MockClient) GetRecordByHash(targetHash string) *Record {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
@@ -101,7 +87,7 @@ func (m *MockClient) RemoveRecord(record Record) error {
 	defer m.mutex.Unlock()
 
 	for i, r := range m.cache {
-		if r.FQDN == record.FQDN && r.Type == record.Type && r.IP == record.IP {
+		if r.Name == record.Name && r.Data.RecordType() == record.Data.RecordType() && r.Data.String() == record.Data.String() {
 			m.cache = append(m.cache[:i], m.cache[i+1:]...)
 			return nil
 		}
