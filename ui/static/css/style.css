@@ -117,9 +117,6 @@ select {
   --space-xl: clamp(3rem, 2.5179rem + 1.2857vw, 3.5625rem);
   --space-2xl: clamp(4rem, 3.3571rem + 1.7143vw, 4.75rem);
   --space-3xl: clamp(6rem, 5.0357rem + 2.5714vw, 7.125rem);
-
-  /* Breakpoints */
-  --breakpoint-lg: 992px;
 }
 [data-theme="dark"] {
   --bg-color: rgb(32, 32, 32);
@@ -510,6 +507,22 @@ p {
   position: relative;
 }
 
+.dns-entry__input-group--value {
+  flex: 0 1 40%;
+}
+@media (max-width: 900px) {
+  .dns-entry__form {
+    flex-direction: column;
+    gap: 30px;
+  }
+
+  .dns-entry__input-group--value,
+  .dns-entry__input-group--hostname,
+  .dns-entry__input-group--ttl {
+    flex: 0 0 100%;
+  }
+}
+
 .dns-entry__fqdn-label {
   position: absolute;
   bottom: -30px;
@@ -564,7 +577,7 @@ input.error {
 .dns-records {
   width: 100%;
   box-shadow: 0 0 0 2px var(--subtle-color); /* Replaced hardcoded color with theme variable */
-  overflow: hidden;
+  overflow-x: auto;
   border-radius: 5px;
   margin-top: 0.5rem;
 }

@@ -30,13 +30,13 @@ func NewNginxConfig(aRecord dnsservice.Record, aaaaRecord *dnsservice.Record, ad
 		Hash:    aRecord.Hash,
 		Domain:  cleanFQDN,
 		Addr:    addr,
-		IPv4:    aRecord.Data.String(),
+		IPv4:    aRecord.Data.Value(),
 		SSLCert: "/etc/letsencrypt/live/" + cleanFQDN + "/fullchain.pem",
 		SSLKey:  "/etc/letsencrypt/live/" + cleanFQDN + "/privkey.pem",
 	}
 
 	if aaaaRecord != nil {
-		ipv6 := aaaaRecord.Data.String()
+		ipv6 := aaaaRecord.Data.Value()
 		config.IPv6 = &ipv6
 	}
 	return config
